@@ -17,7 +17,8 @@ public class DatasetService : IDatasetService
         return await _context.Datasets.Select(
             d => new api.Dataset 
                 {
-                    Title = d.Title 
+                    Title = d.Title,
+                    Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
                 }
             ).ToListAsync();
     }
