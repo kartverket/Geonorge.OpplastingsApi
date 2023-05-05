@@ -1,5 +1,6 @@
 ﻿using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Models.Entity;
+using Geonorge.OpplastingsApi.Services;
 using Microsoft.EntityFrameworkCore;
 using api = Geonorge.OpplastingsApi.Models.Api;
 
@@ -7,15 +8,20 @@ public class DatasetService : IDatasetService
 {
 
     private readonly ApplicationContext _context;
+    private readonly IAuthService _authService;
 
-    public DatasetService(ApplicationContext context) 
+    public DatasetService(ApplicationContext context, IAuthService authService) 
     {
-            _context = context;
+        _context = context;
+        _authService = authService;
     }
 
     public async Task<List<api.Dataset>> GetDatasets()
     {
-        User user = GetUser(); //Todo add service
+        User user = await _authService.GetUser();
+
+        if(user == null)
+            user = GetTestUser(); //Todo remove test user throw new UnauthorizedAccessException();
 
         if (user.IsAdmin) 
         { 
@@ -38,7 +44,7 @@ public class DatasetService : IDatasetService
                 ).ToListAsync();
         }
 
-        return null;
+        throw new UnauthorizedAccessException();
 
     }
 
@@ -80,7 +86,7 @@ public class DatasetService : IDatasetService
         throw new NotImplementedException();
     }
 
-    private User GetUser()
+    private User GetTestUser()
     {
         //test data
         return new User { OrganizationName = "Kartverket2", Roles = new List<string>() { Role.Editor, "nd.datast1" } };
