@@ -13,6 +13,7 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         [StringLength(255)]
         [Required]
         public string UploaderPerson { get; set; }
+        //Todo? public string UploaderOrganization { get; set; }
         [StringLength(255)]
         [Required]
         public string Status { get; set; }

@@ -27,6 +27,8 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         [Required]
         public string Status { get; set; }
 
+        //Todo add property for allowed formats?
+
         public List<File> Files { get; }
     }
 }
