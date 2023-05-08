@@ -1,3 +1,4 @@
+using Geonorge.OpplastingsApi.Extensions;
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
 using LoggingWithSerilog.Middleware;
@@ -35,12 +36,13 @@ builder.Services.AddDbContext<ApplicationContext>(opts =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+
+app.UseSwaggerUI(swagger =>
+{    
+    var url = $"{(!app.Environment.IsLocal() ? "/api" : "")}/swagger/v1/swagger.json";
+    swagger.SwaggerEndpoint(url, "Geonorge.OpplastingsApi API V1");
+});
 
 app.UseHttpsRedirection();
 
