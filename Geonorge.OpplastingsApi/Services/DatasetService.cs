@@ -20,14 +20,12 @@ public class DatasetService : IDatasetService
     {
         User user = await _authService.GetUser();
 
-        if(user == null)
-            user = GetTestUser(); //Todo remove test user throw new UnauthorizedAccessException();
-
         if (user.IsAdmin) 
         { 
             return await _context.Datasets.Select(
                 d => new api.Dataset 
                     {
+                        Id = d.Id,
                         Title = d.Title,
                         Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
                     }
@@ -38,6 +36,7 @@ public class DatasetService : IDatasetService
             return await _context.Datasets.Where(d => d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)).Select(
                 d => new api.Dataset
                 {
+                    Id = d.Id,
                     Title = d.Title,
                     Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
                 }
@@ -48,14 +47,40 @@ public class DatasetService : IDatasetService
 
     }
 
-    public Task<api.Dataset> GetDataset(int id)
+    public async Task<api.Dataset> GetDataset(int id)
     {
-        throw new NotImplementedException();
+
+        User user = await _authService.GetUser();
+
+        var dataset = await _context.Datasets.Where(d => d.Id == id && (d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin).Select(
+            d => new api.Dataset
+            {
+                Id=d.Id,
+                Title = d.Title,
+                Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
+            }
+            ).FirstOrDefaultAsync();
+
+        return dataset;
     }
 
-    public Task<api.Dataset> AddDataset(api.Dataset dataset)
+    public async Task<api.Dataset> AddDataset(api.Dataset datasetNew)
     {
-        throw new NotImplementedException();
+        var dataset = new Dataset
+        {
+            Title = datasetNew.Title,
+            ContactEmail = "utvikling@arkitektum.no",
+            Status = "Sendt inn",
+            ContactName = "Dag",
+            MetadataUuid = "xxxxxxxxxxxxxxxxxxxxxxxx",
+            OwnerOrganization = "Kartverket",
+            RequiredRole = "nd.datasett1"
+        };
+        await _context.Datasets.AddAsync(dataset);
+        await _context.SaveChangesAsync();
+
+        return new api.Dataset { Id = dataset.Id, Title = dataset.Title };
+
     }
 
     public Task<api.Dataset> UpdateDataset(api.Dataset dataset)
@@ -84,12 +109,6 @@ public class DatasetService : IDatasetService
     public Task<api.File> RemoveFile(int id)
     {
         throw new NotImplementedException();
-    }
-
-    private User GetTestUser()
-    {
-        //test data
-        return new User { OrganizationName = "Kartverket2", Roles = new List<string>() { Role.Editor, "nd.datast1" } };
     }
 }
 

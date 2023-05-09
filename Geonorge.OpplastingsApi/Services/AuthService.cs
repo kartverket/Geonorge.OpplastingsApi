@@ -32,14 +32,18 @@ namespace Geonorge.OpplastingsApi.Services
 
         public async Task<User> GetUser()
         {
+            User user = null;
             _httpContextAccessor.HttpContext.Request.Headers.TryGetValue("Authorization", out var authTokens);
 
             var authToken = authTokens.SingleOrDefault()?.Replace("Bearer ", "");
 
-            if (string.IsNullOrWhiteSpace(authToken))
-                return null;
+            if (!string.IsNullOrWhiteSpace(authToken))
+                await GetUserFromToken(authToken);
 
-            return await GetUserFromToken(authToken);
+            if (user == null)
+                user = GetTestUser(); //Todo remove test user throw new UnauthorizedAccessException();
+        
+            return user;
         }
 
         private async Task<User> GetUserFromToken(string authToken)
@@ -152,6 +156,12 @@ namespace Geonorge.OpplastingsApi.Services
                 _logger.LogError(exception, $"Could not get roles for user '{username}'.");
                 return null;
             }
+        }
+
+        private User GetTestUser()
+        {
+            //test data
+            return new User { OrganizationName = "Kartverket2", Roles = new List<string>() { Role.Editor, "nd.datast1" } };
         }
     }
 

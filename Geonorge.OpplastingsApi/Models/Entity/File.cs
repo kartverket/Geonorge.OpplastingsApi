@@ -19,5 +19,7 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         [StringLength(255)]
         [Required]
         public string Status { get; set; }
+
+        public virtual Dataset Dataset { get; set; }
     }
 }

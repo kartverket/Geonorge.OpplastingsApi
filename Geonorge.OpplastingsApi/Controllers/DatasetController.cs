@@ -22,5 +22,17 @@ namespace Geonorge.OpplastingsApi.Controllers
         {
            return await _datasetService.GetDatasets();
         }
+
+        [HttpGet("{id:int}")]
+        public async Task<Dataset> GetDataset(int id)
+        {
+            return await _datasetService.GetDataset(id);
+        }
+
+        [HttpPost(Name = "PostDataset")]
+        public async Task<Dataset> AddDataset(Dataset dataset)
+        {
+            return await _datasetService.AddDataset(dataset);
+        }
     }
 }
