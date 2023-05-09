@@ -88,9 +88,18 @@ public class DatasetService : IDatasetService
         throw new NotImplementedException();
     }
 
-    public Task<api.Dataset> RemoveDataset(api.Dataset dataset)
+    public async Task<api.Dataset> RemoveDataset(int id)
     {
-        throw new NotImplementedException();
+        var dataset = _context.Datasets.FirstOrDefault(d => d.Id == id);
+        if (dataset != null) 
+        {
+            _context.Datasets.Remove(dataset);
+            await _context.SaveChangesAsync();
+
+            return new api.Dataset { Id = dataset.Id, Title = dataset.Title };
+        }
+
+        return null;
     }
 
     public Task<api.File> GetFile(int id)
@@ -118,7 +127,7 @@ public interface IDatasetService
     Task<api.Dataset> GetDataset(int id);
     Task<api.Dataset> AddDataset(api.Dataset dataset);
     Task<api.Dataset> UpdateDataset(api.Dataset dataset);
-    Task<api.Dataset> RemoveDataset(api.Dataset dataset);
+    Task<api.Dataset> RemoveDataset(int id);
 
     Task<api.File> GetFile(int id);
     Task<api.File> AddFile(api.File fileInfo, IFormFile file);

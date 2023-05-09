@@ -161,7 +161,7 @@ namespace Geonorge.OpplastingsApi.Services
         private User GetTestUser()
         {
             //test data
-            return new User { OrganizationName = "Kartverket2", Roles = new List<string>() { Role.Editor, "nd.datast1" } };
+            return new User { OrganizationName = "Kartverket", Roles = new List<string>() { Role.Admin, "nd.datast1" } };
         }
     }
 
