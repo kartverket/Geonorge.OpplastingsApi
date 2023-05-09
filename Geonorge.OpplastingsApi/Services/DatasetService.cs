@@ -27,7 +27,7 @@ public class DatasetService : IDatasetService
                     {
                         Id = d.Id,
                         Title = d.Title,
-                        Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
+                        Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList()
                     }
                 ).ToListAsync();
         }
@@ -38,7 +38,7 @@ public class DatasetService : IDatasetService
                 {
                     Id = d.Id,
                     Title = d.Title,
-                    Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
+                    Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
                 }
                 ).ToListAsync();
         }
@@ -52,12 +52,12 @@ public class DatasetService : IDatasetService
 
         User user = await _authService.GetUser();
 
-        var dataset = await _context.Datasets.Where(d => d.Id == id && (d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin).Select(
+        var dataset = await _context.Datasets.Where(d => d.Id == id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(
             d => new api.Dataset
             {
                 Id=d.Id,
                 Title = d.Title,
-                Files = d.Files.Select(f => new api.File { FileName = f.FileName }).ToList()
+                Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
             }
             ).FirstOrDefaultAsync();
 
@@ -102,9 +102,21 @@ public class DatasetService : IDatasetService
         return null;
     }
 
-    public Task<api.File> GetFile(int id)
+    public async Task<api.File> GetFile(int id)
     {
-        throw new NotImplementedException();
+        User user = await _authService.GetUser();
+
+        var files = await _context.Datasets.Where(d => ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(d => d.Files).Where(dd => dd.Contains(new Geonorge.OpplastingsApi.Models.Entity.File { Id = id })).FirstOrDefaultAsync();
+        var file = files?.FirstOrDefault();
+
+        api.File fileData = null;
+
+        if (file != null) 
+        {
+            fileData = new api.File {Id = file.Id, FileName = file.FileName };
+        }
+
+        return fileData;
     }
     public Task<api.File> AddFile(api.File fileInfo, IFormFile file)
     {

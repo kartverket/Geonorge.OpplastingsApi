@@ -1,6 +1,7 @@
 using Geonorge.OpplastingsApi.Models.Api;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using File = Geonorge.OpplastingsApi.Models.Api.File;
 
 namespace Geonorge.OpplastingsApi.Controllers
 {
@@ -39,6 +40,12 @@ namespace Geonorge.OpplastingsApi.Controllers
         public async Task<Dataset> DeleteDataset(int id)
         {
             return await _datasetService.RemoveDataset(id);
+        }
+
+        [HttpGet("file/{id:int}")]
+        public async Task<File> GetFile(int id)
+        {
+            return await _datasetService.GetFile(id);
         }
     }
 }
