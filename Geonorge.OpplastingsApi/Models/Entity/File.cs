@@ -18,6 +18,9 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         public string UploaderOrganization { get; set; }
         [StringLength(255)]
         [Required]
+        public string UploaderEmail { get; set; }
+        [StringLength(255)]
+        [Required]
         public string Status { get; set; }
 
         public virtual Dataset Dataset { get; set; }
