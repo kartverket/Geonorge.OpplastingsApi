@@ -122,12 +122,13 @@ public class DatasetService : IDatasetService
     {
         User user = await _authService.GetUser();
 
-        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
+        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Include(ff => ff.Files).FirstOrDefault();
 
         var fileNew = new Geonorge.OpplastingsApi.Models.Entity.File
         {
             FileName = fileInfo.FileName,
             Date = DateTime.Now,
+            //todo remove test
             Status = "Lastet opp",
             UploaderOrganization = "Kartverket",
             UploaderPerson = "Ole"
@@ -139,6 +140,12 @@ public class DatasetService : IDatasetService
         await _context.SaveChangesAsync();
 
         fileInfo.Id = fileNew.Id;
+        fileInfo.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title };
+        fileInfo.Dataset.Files = new List<api.File>();
+        foreach (var fileData in dataset.Files)
+        {
+            fileInfo.Dataset.Files.Add( new api.File { Id = fileData.Id,  FileName = fileData.FileName });
+        }
 
         return fileInfo;
     }
