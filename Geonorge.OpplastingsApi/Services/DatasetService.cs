@@ -70,7 +70,6 @@ public class DatasetService : IDatasetService
         {
             Title = datasetNew.Title,
             ContactEmail = "utvikling@arkitektum.no",
-            Status = "Sendt inn",
             ContactName = "Dag",
             MetadataUuid = "xxxxxxxxxxxxxxxxxxxxxxxx",
             OwnerOrganization = "Kartverket",

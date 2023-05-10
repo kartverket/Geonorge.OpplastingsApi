@@ -23,9 +23,6 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         [StringLength(255)]
         [Required]
         public string RequiredRole { get; set; }
-        [StringLength(255)]
-        [Required]
-        public string Status { get; set; }
 
         //Todo add property for allowed formats?
 
