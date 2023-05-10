@@ -118,9 +118,29 @@ public class DatasetService : IDatasetService
 
         return fileData;
     }
-    public Task<api.File> AddFile(api.File fileInfo, IFormFile file)
+    public async Task<api.File> AddFile(api.File fileInfo, IFormFile file)
     {
-        throw new NotImplementedException();
+        User user = await _authService.GetUser();
+
+        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
+
+        var fileNew = new Geonorge.OpplastingsApi.Models.Entity.File
+        {
+            FileName = fileInfo.FileName,
+            Date = DateTime.Now,
+            Status = "Lastet opp",
+            UploaderOrganization = "Kartverket",
+            UploaderPerson = "Ole"
+        };
+
+
+        dataset.Files.Add(fileNew);
+
+        await _context.SaveChangesAsync();
+
+        fileInfo.Id = fileNew.Id;
+
+        return fileInfo;
     }
     public Task<api.File> UpdateFile(api.File fileInfo, IFormFile file)
     {
