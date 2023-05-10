@@ -4,13 +4,17 @@ using Geonorge.OpplastingsApi.Services;
 using LoggingWithSerilog.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
+string configFile = "appsettings.json";
+if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Local")
+    configFile = "appsettings.Development.json";
+
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json")
-    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", true)
+    .AddJsonFile(configFile)
     .Build();
 
 var logger = new LoggerConfiguration()
@@ -51,6 +55,15 @@ app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
 app.UseAuthorization();
 
 app.MapControllers();
+
+var urlProxy = configuration.GetValue<string>("UrlProxy");
+
+if (!string.IsNullOrWhiteSpace(urlProxy))
+{
+    var proxy = new WebProxy(urlProxy) { Credentials = CredentialCache.DefaultCredentials };
+    WebRequest.DefaultWebProxy = proxy;
+    HttpClient.DefaultProxy = proxy;
+}
 
 using (var scope = app.Services.CreateScope())
 {
