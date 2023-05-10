@@ -43,7 +43,7 @@ public class DatasetService : IDatasetService
                 ).ToListAsync();
         }
 
-        throw new UnauthorizedAccessException();
+        throw new AuthorizationException("Manglende tilgang til ressursen");
 
     }
 
@@ -69,6 +69,7 @@ public class DatasetService : IDatasetService
         var dataset = new Dataset
         {
             Title = datasetNew.Title,
+            //todo fix test
             ContactEmail = "utvikling@arkitektum.no",
             ContactName = "Dag",
             MetadataUuid = "xxxxxxxxxxxxxxxxxxxxxxxx",

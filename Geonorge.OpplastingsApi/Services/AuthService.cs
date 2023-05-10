@@ -41,9 +41,9 @@ namespace Geonorge.OpplastingsApi.Services
                user = await GetUserFromToken(authToken);
 
             if (user == null)
-                user = GetTestUser(); //Todo remove test user throw new UnauthorizedAccessException();
-        
-            return user;
+                throw new UnauthorizedAccessException("Manglende eller feil autorisering");//user = GetTestUser();
+
+                return user;
         }
 
         private async Task<User> GetUserFromToken(string authToken)

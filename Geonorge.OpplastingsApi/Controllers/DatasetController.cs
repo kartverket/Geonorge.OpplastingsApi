@@ -1,27 +1,44 @@
 using Geonorge.OpplastingsApi.Models.Api;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using System;
 using File = Geonorge.OpplastingsApi.Models.Api.File;
 
 namespace Geonorge.OpplastingsApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DatasetController : ControllerBase
+    public class DatasetController : BaseController
     {
         private readonly IDatasetService _datasetService;
         private readonly ILogger<DatasetController> _logger;
 
-        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger)
+        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger) : base(logger)
         {
             _datasetService = datasetService;
             _logger = logger;
         }
 
         [HttpGet(Name = "GetDatasets")]
-        public async Task<List<Dataset>> Get()
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Dataset>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Get()
         {
-           return await _datasetService.GetDatasets();
+           try 
+           { 
+              return Ok(await _datasetService.GetDatasets());
+           }
+           catch(Exception ex) 
+           {
+            var result = HandleException(ex);
+
+            if (result != null)
+                return result;
+
+            throw;
+           }
         }
 
         [HttpGet("{id:int}")]
