@@ -38,7 +38,7 @@ namespace Geonorge.OpplastingsApi.Services
             var authToken = authTokens.SingleOrDefault()?.Replace("Bearer ", "");
 
             if (!string.IsNullOrWhiteSpace(authToken))
-                await GetUserFromToken(authToken);
+               user = await GetUserFromToken(authToken);
 
             if (user == null)
                 user = GetTestUser(); //Todo remove test user throw new UnauthorizedAccessException();
@@ -48,9 +48,6 @@ namespace Geonorge.OpplastingsApi.Services
 
         private async Task<User> GetUserFromToken(string authToken)
         {
-            var byteArray = Encoding.ASCII.GetBytes(_config.IntrospectionCredentials);
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-
             var formUrlEncodedContent = new FormUrlEncodedContent(new[] {
                 new KeyValuePair<string, string>("token", authToken),
                 new KeyValuePair<string, string>("client_id", _config.ClientId),
