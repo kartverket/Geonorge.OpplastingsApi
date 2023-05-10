@@ -9,11 +9,13 @@ public class DatasetService : IDatasetService
 
     private readonly ApplicationContext _context;
     private readonly IAuthService _authService;
+    private readonly INotificationService _notificationService;
 
-    public DatasetService(ApplicationContext context, IAuthService authService) 
+    public DatasetService(ApplicationContext context, IAuthService authService, INotificationService notificationService) 
     {
         _context = context;
         _authService = authService;
+        _notificationService = notificationService;
     }
 
     public async Task<List<api.Dataset>> GetDatasets()
@@ -136,7 +138,7 @@ public class DatasetService : IDatasetService
 
 
         dataset.Files.Add(fileNew);
-
+        //todo check error save
         await _context.SaveChangesAsync();
 
         fileInfo.Id = fileNew.Id;
@@ -146,6 +148,8 @@ public class DatasetService : IDatasetService
         {
             fileInfo.Dataset.Files.Add( new api.File { Id = fileData.Id,  FileName = fileData.FileName });
         }
+
+        _notificationService.SendEmailUploadedFileToContact(fileNew);
 
         return fileInfo;
     }

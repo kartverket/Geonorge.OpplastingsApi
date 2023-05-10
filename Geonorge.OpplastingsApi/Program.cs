@@ -64,10 +64,12 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IDatasetService, DatasetService>();
+builder.Services.AddTransient<INotificationService, NotificationService>();
 builder.Services.AddDbContext<ApplicationContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("UploadApiDatabase")));
 
 builder.Services.Configure<AuthConfiguration>(configuration.GetSection(AuthConfiguration.SectionName));
+builder.Services.Configure<NotificationConfiguration>(configuration.GetSection(NotificationConfiguration.SectionName));
 
 var app = builder.Build();
 
