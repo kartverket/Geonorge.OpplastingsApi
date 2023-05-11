@@ -130,10 +130,11 @@ public class DatasetService : IDatasetService
         {
             FileName = fileInfo.FileName,
             Date = DateTime.Now,
-            //todo remove test
+            //todo set automatic?
             Status = "Lastet opp",
             UploaderOrganization = "Kartverket",
-            UploaderPerson = "Ole"
+            UploaderPerson = "Ole",
+            UploaderEmail = "xxx@arkitektum.no"
         };
 
 
