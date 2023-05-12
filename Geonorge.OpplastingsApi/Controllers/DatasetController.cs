@@ -53,6 +53,12 @@ namespace Geonorge.OpplastingsApi.Controllers
             return await _datasetService.AddDataset(dataset);
         }
 
+        [HttpPut("{id:int}", Name = "PutDataset")]
+        public async Task<Dataset> UpdateDataset(int id, Dataset dataset)
+        {
+            return await _datasetService.UpdateDataset(id, dataset);
+        }
+
         [HttpDelete("{id:int}", Name = "DeleteDataset")]
         public async Task<Dataset> DeleteDataset(int id)
         {

@@ -68,15 +68,19 @@ public class DatasetService : IDatasetService
 
     public async Task<api.Dataset> AddDataset(api.Dataset datasetNew)
     {
+        User user = await _authService.GetUser();
+
+        if (!user.IsAdmin)
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+
         var dataset = new Dataset
         {
             Title = datasetNew.Title,
-            //todo fix test
-            ContactEmail = "utvikling@arkitektum.no",
-            ContactName = "Dag",
-            MetadataUuid = "xxxxxxxxxxxxxxxxxxxxxxxx",
-            OwnerOrganization = "Kartverket",
-            RequiredRole = "nd.datasett1"
+            MetadataUuid = datasetNew.MetadataUuid,
+            ContactEmail = datasetNew.ContactEmail,
+            ContactName = datasetNew.ContactName,
+            OwnerOrganization = datasetNew.OwnerOrganization,
+            RequiredRole = datasetNew.RequiredRole
         };
         await _context.Datasets.AddAsync(dataset);
         await _context.SaveChangesAsync();
@@ -85,13 +89,54 @@ public class DatasetService : IDatasetService
 
     }
 
-    public Task<api.Dataset> UpdateDataset(api.Dataset dataset)
+    public async Task<api.Dataset> UpdateDataset(int id, api.Dataset datasetUpdated)
     {
-        throw new NotImplementedException();
+        User user = await _authService.GetUser();
+
+        if (!user.IsAdmin)
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+
+        var dataset = await _context.Datasets.Where(d => d.Id == id).FirstOrDefaultAsync();
+
+        if (dataset == null)
+            throw new Exception("Datasettet finnes ikke");
+
+        if(!string.IsNullOrEmpty(datasetUpdated.ContactName))
+            dataset.ContactName = datasetUpdated.ContactName;
+
+        if (!string.IsNullOrEmpty(datasetUpdated.ContactEmail))
+            dataset.ContactEmail = datasetUpdated.ContactEmail;
+
+        if (!string.IsNullOrEmpty(datasetUpdated.OwnerOrganization))
+            dataset.OwnerOrganization = datasetUpdated.OwnerOrganization;
+
+        if (!string.IsNullOrEmpty(datasetUpdated.Title))
+            dataset.Title = datasetUpdated.Title;
+
+        if (!string.IsNullOrEmpty(datasetUpdated.MetadataUuid))
+            dataset.MetadataUuid = datasetUpdated.MetadataUuid;
+
+        if (!string.IsNullOrEmpty(datasetUpdated.RequiredRole))
+            dataset.RequiredRole = datasetUpdated.RequiredRole;
+
+        _context.SaveChanges();
+
+        return new api.Dataset 
+        { 
+            Id = dataset.Id, Title = dataset.Title,
+            ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName,
+            MetadataUuid = dataset.MetadataUuid, RequiredRole = dataset.RequiredRole,
+            OwnerOrganization=dataset.OwnerOrganization
+        };
     }
 
     public async Task<api.Dataset> RemoveDataset(int id)
     {
+        User user = await _authService.GetUser();
+
+        if (!user.IsAdmin)
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+
         var dataset = _context.Datasets.FirstOrDefault(d => d.Id == id);
         if (dataset != null) 
         {
@@ -130,7 +175,7 @@ public class DatasetService : IDatasetService
         {
             FileName = fileInfo.FileName,
             Date = DateTime.Now,
-            Status = "Lastet opp",
+            Status = "Lastet opp", // todo endre status når eier laster ned => I progress
             UploaderOrganization = user.OrganizationName,
             UploaderPerson = user.Name,
             UploaderEmail = user.Email,
@@ -170,7 +215,7 @@ public interface IDatasetService
     Task<List<api.Dataset>> GetDatasets();
     Task<api.Dataset> GetDataset(int id);
     Task<api.Dataset> AddDataset(api.Dataset dataset);
-    Task<api.Dataset> UpdateDataset(api.Dataset dataset);
+    Task<api.Dataset> UpdateDataset(int id, api.Dataset dataset);
     Task<api.Dataset> RemoveDataset(int id);
 
     Task<api.File> GetFile(int id);
