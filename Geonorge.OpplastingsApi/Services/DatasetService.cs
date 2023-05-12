@@ -169,6 +169,11 @@ public class DatasetService : IDatasetService
     {
         User user = await _authService.GetUser();
 
+        if(user == null)
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+
+        //todo check user rights
+
         var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Include(ff => ff.Files).FirstOrDefault();
 
         var fileNew = new Geonorge.OpplastingsApi.Models.Entity.File
@@ -199,14 +204,26 @@ public class DatasetService : IDatasetService
 
         return fileInfo;
     }
-    public Task<api.File> UpdateFile(api.File fileInfo, IFormFile file)
+    public Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file)
     {
+        //todo check access
         throw new NotImplementedException();
     }
 
     public Task<api.File> RemoveFile(int id)
     {
+        //todo check access
+        //todo have Files in _context=
+        //var file = _context.Datasets.Where(x => x.Files.Contains(id)).FirstOrDefault();
+
         throw new NotImplementedException();
+    }
+
+    public async Task<api.File> FileStatusChange(int fileId, string status)
+    {
+        //todo update status
+        _notificationService.SendEmailStatusChangedToUploader(new Geonorge.OpplastingsApi.Models.Entity.File());
+        return new api.File();
     }
 }
 
@@ -220,6 +237,8 @@ public interface IDatasetService
 
     Task<api.File> GetFile(int id);
     Task<api.File> AddFile(api.File fileInfo, IFormFile file);
-    Task<api.File> UpdateFile(api.File fileInfo, IFormFile file);
+    Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file);
     Task<api.File> RemoveFile(int id);
+
+    Task<api.File> FileStatusChange(int fileId, string status);
 }

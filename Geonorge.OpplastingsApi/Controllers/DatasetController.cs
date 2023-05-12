@@ -6,6 +6,7 @@ using File = Geonorge.OpplastingsApi.Models.Api.File;
 
 namespace Geonorge.OpplastingsApi.Controllers
 {
+    //todo handle response exception for all methods
     [ApiController]
     [Route("[controller]")]
     public class DatasetController : BaseController
@@ -75,6 +76,24 @@ namespace Geonorge.OpplastingsApi.Controllers
         public async Task<File> AddFile(File fileInfo)
         {
             return await _datasetService.AddFile(fileInfo, null);
+        }
+
+        [HttpPut("file/{id:int}", Name = "PutFile")]
+        public async Task<File> UpdateFile(int id, File file)
+        {
+            return await _datasetService.UpdateFile(id, file, null);
+        }
+
+        [HttpDelete("file/{id:int}", Name = "DeleteFile")]
+        public async Task<File> UpdateFile(int id)
+        {
+            return await _datasetService.RemoveFile(id);
+        }
+
+        [HttpPut("fileStatusChange/{id:int}", Name = "PutFileStatusChange")]
+        public async Task<File> UpdateFileStatusChange(int id, string status)
+        {
+            return await _datasetService.FileStatusChange(id, status);
         }
     }
 }
