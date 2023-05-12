@@ -125,6 +125,9 @@ namespace Geonorge.OpplastingsApi.Services
                 }
 
                 userViewModel.OrganizationName = organization["name"].ToString();
+                userViewModel.Email = json["baat_email"].ToString();
+                userViewModel.Username = json["user"].ToString();
+                userViewModel.Name = json["baat_name"].ToString();
             }
             catch (Exception exception)
             {
