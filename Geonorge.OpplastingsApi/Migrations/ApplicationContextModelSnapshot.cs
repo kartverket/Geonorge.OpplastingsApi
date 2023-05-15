@@ -113,7 +113,7 @@ namespace Geonorge.OpplastingsApi.Migrations
 
                     b.HasIndex("DatasetId");
 
-                    b.ToTable("File");
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("Geonorge.OpplastingsApi.Models.Entity.File", b =>

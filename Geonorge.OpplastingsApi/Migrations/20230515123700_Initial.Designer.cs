@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Geonorge.OpplastingsApi.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20230505141727_AddUploaderOrganization")]
-    partial class AddUploaderOrganization
+    [Migration("20230515123700_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,11 +58,6 @@ namespace Geonorge.OpplastingsApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -81,7 +76,7 @@ namespace Geonorge.OpplastingsApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("DatasetId")
+                    b.Property<int>("DatasetId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Date")
@@ -97,6 +92,11 @@ namespace Geonorge.OpplastingsApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("UploaderEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("UploaderOrganization")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -107,18 +107,27 @@ namespace Geonorge.OpplastingsApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("UploaderUsername")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DatasetId");
 
-                    b.ToTable("File");
+                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("Geonorge.OpplastingsApi.Models.Entity.File", b =>
                 {
-                    b.HasOne("Geonorge.OpplastingsApi.Models.Entity.Dataset", null)
+                    b.HasOne("Geonorge.OpplastingsApi.Models.Entity.Dataset", "Dataset")
                         .WithMany("Files")
-                        .HasForeignKey("DatasetId");
+                        .HasForeignKey("DatasetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dataset");
                 });
 
             modelBuilder.Entity("Geonorge.OpplastingsApi.Models.Entity.Dataset", b =>

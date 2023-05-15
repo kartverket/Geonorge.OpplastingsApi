@@ -10,5 +10,6 @@ namespace Geonorge.OpplastingsApi.Models.Entity
                 }
 
         public DbSet<Dataset> Datasets { get; set; }
+        public DbSet<File> Files { get; set; }
     }
 }
