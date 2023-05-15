@@ -204,18 +204,24 @@ public class DatasetService : IDatasetService
 
         return fileInfo;
     }
-    public async Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file)
+    public async Task<api.File> UpdateFile(int id, api.File fileUpdated, IFormFile file)
     {
         //todo check access
-        var fileData = await _context.Files.Where(f => f.Id == fileInfo.Id).FirstOrDefaultAsync();
+        var fileData = await _context.Files.Where(f => f.Id == fileUpdated.Id).FirstOrDefaultAsync();
+        var currentStatus = fileData.Status;
 
         if (fileData != null)
         {
-            if(!string.IsNullOrEmpty(fileInfo.FileName))
-                fileData.FileName = fileInfo.FileName;
+            if(!string.IsNullOrEmpty(fileUpdated.FileName))
+                fileData.FileName = fileUpdated.FileName;
+            if (!string.IsNullOrEmpty(fileUpdated.Status))
+                fileData.Status = fileUpdated.Status;
 
             _context.Files.Update(fileData);
             _context.SaveChangesAsync();
+
+            if(currentStatus != fileUpdated.Status)
+                _notificationService.SendEmailStatusChangedToUploader(fileData);
         }
 
         //todo update file in folder
@@ -240,9 +246,21 @@ public class DatasetService : IDatasetService
 
     public async Task<api.File> FileStatusChange(int fileId, string status)
     {
-        //todo update status
-        _notificationService.SendEmailStatusChangedToUploader(new Geonorge.OpplastingsApi.Models.Entity.File());
-        return new api.File();
+        //todo check access
+
+        var file = await _context.Files.Where(f => f.Id == fileId).FirstOrDefaultAsync();
+
+        if (file != null)
+        {
+            file.Status = status;
+
+            _context.Files.Update(file);
+            _context.SaveChangesAsync();
+        }
+
+        _notificationService.SendEmailStatusChangedToUploader(file);
+
+        return new api.File { Id = file.Id, FileName = file.FileName, Status = file.Status };
     }
 }
 
