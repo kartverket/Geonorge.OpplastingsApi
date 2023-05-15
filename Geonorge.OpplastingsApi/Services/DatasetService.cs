@@ -210,13 +210,19 @@ public class DatasetService : IDatasetService
         throw new NotImplementedException();
     }
 
-    public Task<api.File> RemoveFile(int id)
+    public async Task<api.File> RemoveFile(int id)
     {
         //todo check access
-        //todo have Files in _context=
-        //var file = _context.Datasets.Where(x => x.Files.Contains(id)).FirstOrDefault();
+        var file = await _context.Files.Where(f => f.Id == id).FirstOrDefaultAsync();
 
-        throw new NotImplementedException();
+        if (file != null) { 
+            _context.Files.Remove(file);
+            _context.SaveChangesAsync();
+        }
+
+        //todo remove file from folder
+
+        return new api.File {  Id = file.Id, FileName = file.FileName};
     }
 
     public async Task<api.File> FileStatusChange(int fileId, string status)
