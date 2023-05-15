@@ -204,10 +204,23 @@ public class DatasetService : IDatasetService
 
         return fileInfo;
     }
-    public Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file)
+    public async Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file)
     {
         //todo check access
-        throw new NotImplementedException();
+        var fileData = await _context.Files.Where(f => f.Id == fileInfo.Id).FirstOrDefaultAsync();
+
+        if (fileData != null)
+        {
+            if(!string.IsNullOrEmpty(fileInfo.FileName))
+                fileData.FileName = fileInfo.FileName;
+
+            _context.Files.Update(fileData);
+            _context.SaveChangesAsync();
+        }
+
+        //todo update file in folder
+
+        return new api.File { Id = fileData.Id, FileName = fileData.FileName };
     }
 
     public async Task<api.File> RemoveFile(int id)
