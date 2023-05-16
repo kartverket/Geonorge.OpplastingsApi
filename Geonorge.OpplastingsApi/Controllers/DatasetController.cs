@@ -1,5 +1,6 @@
 using Geonorge.OpplastingsApi.Models.Api;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using File = Geonorge.OpplastingsApi.Models.Api.File;
@@ -43,19 +44,59 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public async Task<Dataset> GetDataset(int id)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dataset))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetDataset(int id)
         {
-            return await _datasetService.GetDataset(id);
+            try
+            {
+                return Ok(await _datasetService.GetDataset(id));
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpPost(Name = "PostDataset")]
-        public async Task<Dataset> AddDataset(Dataset dataset)
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(DatasetNew))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddDataset(DatasetNew dataset)
         {
-            return await _datasetService.AddDataset(dataset);
+            if (!ModelState.IsValid)
+            {
+                LogValidationErrors();
+                return BadRequest(ModelState);
+            }
+            try 
+            { 
+            var datasetAdded = await _datasetService.AddDataset(dataset);
+
+            return Created("/Dataset/" + datasetAdded.Id, datasetAdded);
+            }
+            catch(Exception ex) 
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpPut("{id:int}", Name = "PutDataset")]
-        public async Task<Dataset> UpdateDataset(int id, Dataset dataset)
+        public async Task<Dataset> UpdateDataset(int id, DatasetUpdate dataset)
         {
             return await _datasetService.UpdateDataset(id, dataset);
         }
@@ -67,15 +108,47 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpGet("file/{id:int}")]
-        public async Task<File> GetFile(int id)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(File))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetFile(int id)
         {
-            return await _datasetService.GetFile(id);
+            try
+            {
+                return Ok(await _datasetService.GetFile(id));
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpGet("download-file/{id:int}")]
-        public async Task<string> GetDownloadFile(int id)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetDownloadFile(int id)
         {
-            return await _datasetService.DownloadFile(id);
+            try
+            {
+                return Ok(await _datasetService.DownloadFile(id));
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpPost("file", Name = "PostFile")]
@@ -101,5 +174,20 @@ namespace Geonorge.OpplastingsApi.Controllers
         {
             return await _datasetService.FileStatusChange(id, status);
         }
+
+        private void LogValidationErrors()
+        {
+            _logger.LogError("Invalid model state: {@errors}", ModelState.Select(x =>
+                new
+                {
+                    Key = x.Key,
+                    Errors = x.Value?.Errors.Select(x => new
+                    {
+                        x.ErrorMessage,
+                        x.Exception
+                    })
+                }));
+        }
+
     }
 }

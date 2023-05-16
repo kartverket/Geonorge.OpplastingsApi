@@ -2,6 +2,7 @@ using Geonorge.OpplastingsApi.Extensions;
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
 using LoggingWithSerilog.Middleware;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -70,6 +71,11 @@ builder.Services.AddDbContext<ApplicationContext>(opts =>
 
 builder.Services.Configure<AuthConfiguration>(configuration.GetSection(AuthConfiguration.SectionName));
 builder.Services.Configure<NotificationConfiguration>(configuration.GetSection(NotificationConfiguration.SectionName));
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 
 var app = builder.Build();
 

@@ -1,4 +1,6 @@
-﻿namespace Geonorge.OpplastingsApi.Models.Api
+﻿using System.Text.Json.Serialization;
+
+namespace Geonorge.OpplastingsApi.Models.Api
 {
     public class Dataset
     {
@@ -10,7 +12,14 @@
         public string? ContactName { get; set; }
         public string? OwnerOrganization { get; set; }
         public string? RequiredRole { get; set; }
-
-        public virtual List<File>? Files { get; set; } 
+        [JsonIgnore]
+        public virtual List<File>? Files { get; set; } = new();
+        [JsonPropertyName("files")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<File> SerializationFiles
+        {
+            get => Files?.Count > 0 ? Files : null;
+            set => Files = value ?? new();
+        }
     }
 }

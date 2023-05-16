@@ -32,6 +32,7 @@ public class DatasetService : IDatasetService
                     {
                         Id = d.Id,
                         Title = d.Title,
+                        ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
                         Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList()
                     }
                 ).ToListAsync();
@@ -43,6 +44,7 @@ public class DatasetService : IDatasetService
                 {
                     Id = d.Id,
                     Title = d.Title,
+                    ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
                     Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
                 }
                 ).ToListAsync();
@@ -81,6 +83,7 @@ public class DatasetService : IDatasetService
             {
                 Id=d.Id,
                 Title = d.Title,
+                ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
                 Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
             }
             ).FirstOrDefaultAsync();
@@ -92,6 +95,11 @@ public class DatasetService : IDatasetService
             {
                 Id = d.Id,
                 Title = d.Title,
+                ContactEmail = d.ContactEmail,
+                ContactName = d.ContactName,
+                MetadataUuid = d.MetadataUuid,
+                OwnerOrganization = d.OwnerOrganization,
+                RequiredRole = d.RequiredRole,
                 Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
             }
             ).FirstOrDefaultAsync();
@@ -102,7 +110,7 @@ public class DatasetService : IDatasetService
             return dataset;
     }
 
-    public async Task<api.Dataset> AddDataset(api.Dataset datasetNew)
+    public async Task<api.Dataset> AddDataset(api.DatasetNew datasetNew)
     {
         User user = await _authService.GetUser();
 
@@ -124,11 +132,12 @@ public class DatasetService : IDatasetService
         await _context.Datasets.AddAsync(dataset);
         await _context.SaveChangesAsync();
 
-        return new api.Dataset { Id = dataset.Id, Title = dataset.Title };
+        return new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail,
+            ContactName = dataset.ContactName, MetadataUuid=dataset.MetadataUuid, OwnerOrganization = dataset.OwnerOrganization, RequiredRole = dataset.RequiredRole };
 
     }
 
-    public async Task<api.Dataset> UpdateDataset(int id, api.Dataset datasetUpdated)
+    public async Task<api.Dataset> UpdateDataset(int id, api.DatasetUpdate datasetUpdated)
     {
         User user = await _authService.GetUser();
 
@@ -395,8 +404,8 @@ public interface IDatasetService
 {
     Task<List<api.Dataset>> GetDatasets();
     Task<api.Dataset> GetDataset(int id);
-    Task<api.Dataset> AddDataset(api.Dataset dataset);
-    Task<api.Dataset> UpdateDataset(int id, api.Dataset dataset);
+    Task<api.Dataset> AddDataset(api.DatasetNew dataset);
+    Task<api.Dataset> UpdateDataset(int id, api.DatasetUpdate dataset);
     Task<api.Dataset> RemoveDataset(int id);
 
     Task<api.File> GetFile(int id);
