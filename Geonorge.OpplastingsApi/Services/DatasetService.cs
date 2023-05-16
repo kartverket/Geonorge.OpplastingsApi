@@ -22,6 +22,9 @@ public class DatasetService : IDatasetService
     {
         User user = await _authService.GetUser();
 
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
         if (user.IsAdmin) 
         { 
             return await _context.Datasets.Select(
@@ -35,7 +38,7 @@ public class DatasetService : IDatasetService
         }
         else if (user.HasRole(Role.Editor)) 
         {
-            return await _context.Datasets.Where(d => d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)).Select(
+            var datasetsOwner = await _context.Datasets.Where(d => d.OwnerOrganization == user.OrganizationName && user.Roles.Contains(d.RequiredRole)).Select(
                 d => new api.Dataset
                 {
                     Id = d.Id,
@@ -43,6 +46,22 @@ public class DatasetService : IDatasetService
                     Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
                 }
                 ).ToListAsync();
+
+            if (datasetsOwner.Any()) 
+                return datasetsOwner;
+
+            var datasetsUploader = await _context.Datasets.Where(d => user.Roles.Contains(d.RequiredRole)).Select(
+                d => new api.Dataset
+                {
+                    Id = d.Id,
+                    Title = d.Title,
+                    Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
+                }
+                ).ToListAsync();
+
+            if (datasetsUploader.Any())
+                return datasetsUploader;
+
         }
 
         throw new AuthorizationException("Manglende tilgang til ressursen");
@@ -54,7 +73,10 @@ public class DatasetService : IDatasetService
 
         User user = await _authService.GetUser();
 
-        var dataset = await _context.Datasets.Where(d => d.Id == id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
+        var dataset = await _context.Datasets.Where(d => d.Id == id && ((d.OwnerOrganization == user.OrganizationName && user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(
             d => new api.Dataset
             {
                 Id=d.Id,
@@ -63,15 +85,32 @@ public class DatasetService : IDatasetService
             }
             ).FirstOrDefaultAsync();
 
-        return dataset;
+        if(dataset == null) 
+        {
+            dataset = await _context.Datasets.Where(d => d.Id == id && (user.Roles.Contains(d.RequiredRole))).Select(
+            d => new api.Dataset
+            {
+                Id = d.Id,
+                Title = d.Title,
+                Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
+            }
+            ).FirstOrDefaultAsync();
+        }
+        if (dataset == null)
+            throw new Exception("Ingen datasett funnet");
+
+            return dataset;
     }
 
     public async Task<api.Dataset> AddDataset(api.Dataset datasetNew)
     {
         User user = await _authService.GetUser();
 
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
         if (!user.IsAdmin)
-            throw new AuthorizationException("Brukeren har ikke tilgang");
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
         var dataset = new Dataset
         {
@@ -92,6 +131,9 @@ public class DatasetService : IDatasetService
     public async Task<api.Dataset> UpdateDataset(int id, api.Dataset datasetUpdated)
     {
         User user = await _authService.GetUser();
+
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
         if (!user.IsAdmin)
             throw new AuthorizationException("Brukeren har ikke tilgang");
@@ -134,6 +176,9 @@ public class DatasetService : IDatasetService
     {
         User user = await _authService.GetUser();
 
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
         if (!user.IsAdmin)
             throw new AuthorizationException("Brukeren har ikke tilgang");
 
@@ -153,28 +198,40 @@ public class DatasetService : IDatasetService
     {
         User user = await _authService.GetUser();
 
-        var files = await _context.Datasets.Where(d => ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(d => d.Files).Where(dd => dd.Contains(new Geonorge.OpplastingsApi.Models.Entity.File { Id = id })).FirstOrDefaultAsync();
-        var file = files?.FirstOrDefault();
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        api.File fileData = null;
+        var file = await _context.Files.Where(f => f.Id == id).Include(d => d.Dataset).FirstOrDefaultAsync();
 
-        if (file != null) 
+        if (file == null)
+            throw new Exception("File not found");
+
+        if (user.IsAdmin) 
         {
-            fileData = new api.File {Id = file.Id, FileName = file.FileName };
+            return new api.File { Id = file.Id, FileName = file.FileName };
         }
 
-        return fileData;
+        if (user.HasRole(Role.Editor))
+        {
+            if(file.Dataset.OwnerOrganization == user.OrganizationName)
+                return new api.File { Id = file.Id, FileName = file.FileName };
+            else if(file.UploaderUsername == user.Username)
+                return new api.File { Id = file.Id, FileName = file.FileName };
+        }
+
+        throw new AuthorizationException("Manglende tilgang til ressursen");
     }
     public async Task<api.File> AddFile(api.File fileInfo, IFormFile file)
     {
         User user = await _authService.GetUser();
 
         if(user == null)
-            throw new AuthorizationException("Brukeren har ikke tilgang");
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        //todo check user rights
+        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
 
-        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Include(ff => ff.Files).FirstOrDefault();
+        if (dataset == null)
+            throw new Exception("Datasett ikke tilgjengelig");
 
         var fileNew = new Geonorge.OpplastingsApi.Models.Entity.File
         {
@@ -194,11 +251,7 @@ public class DatasetService : IDatasetService
 
         fileInfo.Id = fileNew.Id;
         fileInfo.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title };
-        fileInfo.Dataset.Files = new List<api.File>();
-        foreach (var fileData in dataset.Files)
-        {
-            fileInfo.Dataset.Files.Add( new api.File { Id = fileData.Id,  FileName = fileData.FileName });
-        }
+       
 
         _notificationService.SendEmailUploadedFileToContact(fileNew);
 
@@ -206,8 +259,21 @@ public class DatasetService : IDatasetService
     }
     public async Task<api.File> UpdateFile(int id, api.File fileUpdated, IFormFile file)
     {
-        //todo check access
-        var fileData = await _context.Files.Where(f => f.Id == fileUpdated.Id).FirstOrDefaultAsync();
+        User user = await _authService.GetUser();
+
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
+        var fileData = await _context.Files.Where(f => f.Id == fileUpdated.Id).Include(d => d.Dataset).FirstOrDefaultAsync();
+
+        if (!user.IsAdmin 
+            || !(user.HasRole(Role.Editor ) && fileData.Dataset.OwnerOrganization == user.OrganizationName)
+            || !(user.HasRole(Role.Editor) && fileData.UploaderUsername == user.Username)
+            )
+        {
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+        }
+
         var currentStatus = fileData.Status;
 
         if (fileData != null)
@@ -231,8 +297,21 @@ public class DatasetService : IDatasetService
 
     public async Task<api.File> RemoveFile(int id)
     {
-        //todo check access
-        var file = await _context.Files.Where(f => f.Id == id).FirstOrDefaultAsync();
+        User user = await _authService.GetUser();
+
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
+        var file = await _context.Files.Where(f => f.Id == id).Include(d => d.Dataset).FirstOrDefaultAsync();
+
+        if (!user.IsAdmin
+             || !(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
+             || !(user.HasRole(Role.Editor) && file.UploaderUsername == user.Username)
+             )
+        {
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+        }
+
 
         if (file != null) { 
             _context.Files.Remove(file);
@@ -246,9 +325,20 @@ public class DatasetService : IDatasetService
 
     public async Task<api.File> FileStatusChange(int fileId, string status)
     {
-        //todo check access
+        User user = await _authService.GetUser();
 
-        var file = await _context.Files.Where(f => f.Id == fileId).FirstOrDefaultAsync();
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
+        var file = await _context.Files.Where(f => f.Id == fileId).Include(d => d.Dataset).FirstOrDefaultAsync();
+
+        if (!user.IsAdmin
+             || !(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
+             || !(user.HasRole(Role.Editor) && file.UploaderUsername == user.Username)
+             )
+        {
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+        }
 
         if (file != null)
         {
@@ -262,6 +352,7 @@ public class DatasetService : IDatasetService
 
         return new api.File { Id = file.Id, FileName = file.FileName, Status = file.Status };
     }
+
 }
 
 public interface IDatasetService
