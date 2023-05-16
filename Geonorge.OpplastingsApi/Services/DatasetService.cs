@@ -237,7 +237,7 @@ public class DatasetService : IDatasetService
         {
             FileName = fileInfo.FileName,
             Date = DateTime.Now,
-            Status = "Lastet opp", // todo endre status når eier laster ned => I progress
+            Status = "Lastet opp",
             UploaderOrganization = user.OrganizationName,
             UploaderPerson = user.Name,
             UploaderEmail = user.Email,
@@ -353,6 +353,42 @@ public class DatasetService : IDatasetService
         return new api.File { Id = file.Id, FileName = file.FileName, Status = file.Status };
     }
 
+    public async Task<string> DownloadFile(int id)
+    {
+        User user = await _authService.GetUser();
+
+        if (user == null)
+            throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
+        var file = await _context.Files.Where(f => f.Id == id).Include(d => d.Dataset).FirstOrDefaultAsync();
+
+        if (file == null)
+            throw new Exception("Filen ble ikke funnnet");
+
+        if (!user.IsAdmin
+             || !(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
+             || !(user.HasRole(Role.Editor) && file.UploaderUsername == user.Username)
+             )
+        {
+            throw new AuthorizationException("Brukeren har ikke tilgang");
+        }
+
+        if (user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName || user.IsAdmin)
+        {
+            var currentStatus = file.Status;
+
+            if (currentStatus == "Sendt inn")
+            {
+                file.Status = "I progress";
+                _context.Files.Update(file);
+                _context.SaveChangesAsync();
+
+                _notificationService.SendEmailStatusChangedToUploader(file);
+            }
+        }
+
+        return file.FileName; // todo stream file
+    }
 }
 
 public interface IDatasetService
@@ -364,6 +400,7 @@ public interface IDatasetService
     Task<api.Dataset> RemoveDataset(int id);
 
     Task<api.File> GetFile(int id);
+    Task<string> DownloadFile(int id);
     Task<api.File> AddFile(api.File fileInfo, IFormFile file);
     Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file);
     Task<api.File> RemoveFile(int id);

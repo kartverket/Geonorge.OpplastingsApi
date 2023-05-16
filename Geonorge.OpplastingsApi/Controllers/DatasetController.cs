@@ -72,6 +72,12 @@ namespace Geonorge.OpplastingsApi.Controllers
             return await _datasetService.GetFile(id);
         }
 
+        [HttpGet("download-file/{id:int}")]
+        public async Task<string> GetDownloadFile(int id)
+        {
+            return await _datasetService.DownloadFile(id);
+        }
+
         [HttpPost("file", Name = "PostFile")]
         public async Task<File> AddFile(File fileInfo)
         {
