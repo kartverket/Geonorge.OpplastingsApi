@@ -230,14 +230,14 @@ public class DatasetService : IDatasetService
 
         throw new AuthorizationException("Manglende tilgang til ressursen");
     }
-    public async Task<api.File> AddFile(api.File fileInfo, IFormFile file)
+    public async Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file)
     {
         User user = await _authService.GetUser();
 
         if(user == null)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.Dataset.Id && ((user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
+        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.datasetId && ((user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
 
         if (dataset == null)
             throw new Exception("Datasett ikke tilgjengelig");
@@ -257,23 +257,23 @@ public class DatasetService : IDatasetService
         dataset.Files.Add(fileNew);
         //todo check error save
         await _context.SaveChangesAsync();
-
-        fileInfo.Id = fileNew.Id;
-        fileInfo.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title };
+        api.File fileAdded = new api.File();
+        fileAdded.Id = fileNew.Id;
+        fileAdded.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title };
        
 
         _notificationService.SendEmailUploadedFileToContact(fileNew);
 
-        return fileInfo;
+        return fileAdded;
     }
-    public async Task<api.File> UpdateFile(int id, api.File fileUpdated, IFormFile file)
+    public async Task<api.File> UpdateFile(int id, api.FileUpdate fileUpdated, IFormFile file)
     {
         User user = await _authService.GetUser();
 
         if (user == null)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        var fileData = await _context.Files.Where(f => f.Id == fileUpdated.Id).Include(d => d.Dataset).FirstOrDefaultAsync();
+        var fileData = await _context.Files.Where(f => f.Id == fileUpdated.datasetId).Include(d => d.Dataset).FirstOrDefaultAsync();
 
         if (!user.IsAdmin 
             || !(user.HasRole(Role.Editor ) && fileData.Dataset.OwnerOrganization == user.OrganizationName)
@@ -410,8 +410,8 @@ public interface IDatasetService
 
     Task<api.File> GetFile(int id);
     Task<string> DownloadFile(int id);
-    Task<api.File> AddFile(api.File fileInfo, IFormFile file);
-    Task<api.File> UpdateFile(int id, api.File fileInfo, IFormFile file);
+    Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file);
+    Task<api.File> UpdateFile(int id, api.FileUpdate fileInfo, IFormFile file);
     Task<api.File> RemoveFile(int id);
 
     Task<api.File> FileStatusChange(int fileId, string status);

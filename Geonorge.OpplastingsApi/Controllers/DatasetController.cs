@@ -126,9 +126,28 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpDelete("{id:int}", Name = "DeleteDataset")]
-        public async Task<Dataset> DeleteDataset(int id)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Dataset))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> DeleteDataset(int id)
         {
-            return await _datasetService.RemoveDataset(id);
+            try
+            {
+                var datasetDeleted = await _datasetService.RemoveDataset(id);
+
+                return Ok(datasetDeleted);
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpGet("file/{id:int}")]
@@ -154,6 +173,7 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpGet("download-file/{id:int}")]
+        //todo return filestream
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -176,27 +196,115 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpPost("file", Name = "PostFile")]
-        public async Task<File> AddFile(File fileInfo)
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(FileNew))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddFile(FileNew fileInfo)
         {
-            return await _datasetService.AddFile(fileInfo, null);
+            if (!ModelState.IsValid)
+            {
+                LogValidationErrors();
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var fileAdded = await _datasetService.AddFile(fileInfo, null);
+
+                return Created("/Dataset/" + fileAdded.Id, fileAdded);
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
+
         }
 
         [HttpPut("file/{id:int}", Name = "PutFile")]
-        public async Task<File> UpdateFile(int id, File file)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileUpdate))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateFile(int id, FileUpdate file)
         {
-            return await _datasetService.UpdateFile(id, file, null);
+            if (!ModelState.IsValid)
+            {
+                LogValidationErrors();
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var fileUpdated = await _datasetService.UpdateFile(id, file, null);
+
+                return Ok(fileUpdated);
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpDelete("file/{id:int}", Name = "DeleteFile")]
-        public async Task<File> UpdateFile(int id)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(File))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> DeleteFile(int id)
         {
-            return await _datasetService.RemoveFile(id);
+            try
+            {
+                var fileDeleted = await _datasetService.RemoveFile(id);
+
+                return Ok(fileDeleted);
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
+
         }
 
-        [HttpPut("fileStatusChange/{id:int}", Name = "PutFileStatusChange")]
-        public async Task<File> UpdateFileStatusChange(int id, string status)
+        [HttpPut("file-status-change/{id:int}", Name = "PutFileStatusChange")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(File))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateFileStatusChange(int id, string status)
         {
-            return await _datasetService.FileStatusChange(id, status);
+            try
+            {
+                var fileUpdated= await _datasetService.FileStatusChange(id, status);
+
+                return Ok(fileUpdated);
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         private void LogValidationErrors()
