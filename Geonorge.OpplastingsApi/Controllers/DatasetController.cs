@@ -96,9 +96,33 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpPut("{id:int}", Name = "PutDataset")]
-        public async Task<Dataset> UpdateDataset(int id, DatasetUpdate dataset)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatasetUpdate))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateDataset(int id, DatasetUpdate dataset)
         {
-            return await _datasetService.UpdateDataset(id, dataset);
+            if (!ModelState.IsValid)
+            {
+                LogValidationErrors();
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var datasetUpdated = await _datasetService.UpdateDataset(id, dataset);
+
+                return Ok(datasetUpdated);
+            }
+            catch (Exception ex)
+            {
+                var result = HandleException(ex);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
         }
 
         [HttpDelete("{id:int}", Name = "DeleteDataset")]
