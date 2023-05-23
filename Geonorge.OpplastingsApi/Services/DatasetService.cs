@@ -242,6 +242,9 @@ public class DatasetService : IDatasetService
 
         var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.datasetId && ((user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
 
+        if (dataset.Files == null)
+            dataset.Files = new List<Geonorge.OpplastingsApi.Models.Entity.File>();
+
         if (dataset == null)
             throw new Exception("Datasett ikke tilgjengelig");
 
@@ -267,6 +270,7 @@ public class DatasetService : IDatasetService
         string uploads = Path.Combine(_config.Path, dataset.MetadataUuid);
         if (file.Length > 0)
         {
+            //todo create folder
             string filePath = Path.Combine(uploads, file.FileName);
             using (Stream fileStream = new FileStream(filePath, FileMode.Create))
             {

@@ -26,6 +26,6 @@ namespace Geonorge.OpplastingsApi.Models.Entity
 
         //Todo add property for allowed formats?
 
-        public virtual List<File>? Files { get; }
+        public virtual List<File>? Files { get; set; }
     }
 }

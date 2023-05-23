@@ -209,8 +209,13 @@ namespace Geonorge.OpplastingsApi.Controllers
         [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
         [RequestSizeLimit(1_048_576_000)]
         [DisableFormValueModelBinding]
-        public async Task<IActionResult> AddFile([FromForm] IFormCollection data)
+        public async Task<IActionResult> AddFile()
         {
+            var fileInfo = new FileNew(); fileInfo.datasetId = 1;
+            //todo get datasetId
+            //var datasetId = data["datasetId"].ToString();
+            //fileInfo.datasetId = Convert.ToUInt16(datasetId);
+
             if (!ModelState.IsValid)
             {
                 LogValidationErrors();
@@ -224,9 +229,6 @@ namespace Geonorge.OpplastingsApi.Controllers
 
             try
             {
-                var fileInfo = new FileNew();
-                var datasetId = data["datasetId"].ToString();
-                fileInfo.datasetId = Convert.ToUInt16(datasetId);
                 var fileAdded = await _datasetService.AddFile(fileInfo, inputFiles.Files[0]);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
