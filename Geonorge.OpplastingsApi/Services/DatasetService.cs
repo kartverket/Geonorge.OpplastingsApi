@@ -247,7 +247,7 @@ public class DatasetService : IDatasetService
 
         var fileNew = new Geonorge.OpplastingsApi.Models.Entity.File
         {
-            FileName = fileInfo.FileName,
+            FileName = file.FileName,
             Date = DateTime.Now,
             Status = "Lastet opp",
             UploaderOrganization = user.OrganizationName,

@@ -1,4 +1,5 @@
 using Geonorge.OpplastingsApi.Extensions;
+using Geonorge.OpplastingsApi.Middleware;
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
 using LoggingWithSerilog.Middleware;
@@ -34,6 +35,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.OperationFilter<FileUploadOperation>();
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "Fyll inn \"Bearer\" [space] og en token i tekstfeltet under. Eksempel: \"Bearer b990274d-2082-34a5-9768-02b396f98d8d\"",

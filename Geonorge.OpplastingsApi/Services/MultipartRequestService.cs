@@ -38,7 +38,7 @@ namespace Geonorge.OpplastingsApi.Services
 
                 return inputFiles;
             }
-            catch
+            catch(Exception ex)
             {
                 return null;
             }

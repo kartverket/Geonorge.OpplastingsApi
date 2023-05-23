@@ -1,9 +1,12 @@
+using Geonorge.OpplastingsApi.Middleware;
 using Geonorge.OpplastingsApi.Models.Api;
 using Geonorge.OpplastingsApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Utilities;
 using Serilog;
 using System;
+using System.IO;
 using File = Geonorge.OpplastingsApi.Models.Api.File;
 
 namespace Geonorge.OpplastingsApi.Controllers
@@ -205,7 +208,8 @@ namespace Geonorge.OpplastingsApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
         [RequestSizeLimit(1_048_576_000)]
-        public async Task<IActionResult> AddFile(FileNew fileInfo, IFormFile file)
+        [DisableFormValueModelBinding]
+        public async Task<IActionResult> AddFile([FromForm] IFormCollection data)
         {
             if (!ModelState.IsValid)
             {
@@ -220,6 +224,9 @@ namespace Geonorge.OpplastingsApi.Controllers
 
             try
             {
+                var fileInfo = new FileNew();
+                var datasetId = data["datasetId"].ToString();
+                fileInfo.datasetId = Convert.ToUInt16(datasetId);
                 var fileAdded = await _datasetService.AddFile(fileInfo, inputFiles.Files[0]);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
