@@ -1,4 +1,5 @@
 using Geonorge.OpplastingsApi.Models.Api;
+using Geonorge.OpplastingsApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -7,18 +8,19 @@ using File = Geonorge.OpplastingsApi.Models.Api.File;
 
 namespace Geonorge.OpplastingsApi.Controllers
 {
-    //todo handle response exception for all methods
     [ApiController]
     [Route("[controller]")]
     public class DatasetController : BaseController
     {
         private readonly IDatasetService _datasetService;
         private readonly ILogger<DatasetController> _logger;
+        private readonly IMultipartRequestService _multipartRequestService;
 
-        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger) : base(logger)
+        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger, IMultipartRequestService multipartRequestService) : base(logger)
         {
             _datasetService = datasetService;
             _logger = logger;
+            _multipartRequestService = multipartRequestService;
         }
 
         [HttpGet(Name = "GetDatasets")]
@@ -201,16 +203,24 @@ namespace Geonorge.OpplastingsApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> AddFile(FileNew fileInfo)
+        [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
+        [RequestSizeLimit(1_048_576_000)]
+        public async Task<IActionResult> AddFile(FileNew fileInfo, IFormFile file)
         {
             if (!ModelState.IsValid)
             {
                 LogValidationErrors();
                 return BadRequest(ModelState);
             }
+
+            var inputFiles = await _multipartRequestService.GetFilesFromMultipart();
+
+            if (inputFiles == null || !inputFiles.Files.Any())
+                return BadRequest();
+
             try
             {
-                var fileAdded = await _datasetService.AddFile(fileInfo, null);
+                var fileAdded = await _datasetService.AddFile(fileInfo, inputFiles.Files[0]);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
             }

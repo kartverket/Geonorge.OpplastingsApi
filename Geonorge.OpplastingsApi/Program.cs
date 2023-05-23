@@ -66,11 +66,13 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IDatasetService, DatasetService>();
 builder.Services.AddTransient<INotificationService, NotificationService>();
+builder.Services.AddTransient<IMultipartRequestService, MultipartRequestService>();
 builder.Services.AddDbContext<ApplicationContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("UploadApiDatabase")));
 
 builder.Services.Configure<AuthConfiguration>(configuration.GetSection(AuthConfiguration.SectionName));
 builder.Services.Configure<NotificationConfiguration>(configuration.GetSection(NotificationConfiguration.SectionName));
+builder.Services.Configure<FileConfiguration>(configuration.GetSection(FileConfiguration.SectionName));
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {

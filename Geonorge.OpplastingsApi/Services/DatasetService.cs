@@ -2,6 +2,7 @@
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using api = Geonorge.OpplastingsApi.Models.Api;
 
 public class DatasetService : IDatasetService
@@ -10,12 +11,14 @@ public class DatasetService : IDatasetService
     private readonly ApplicationContext _context;
     private readonly IAuthService _authService;
     private readonly INotificationService _notificationService;
+    private readonly FileConfiguration _config;
 
-    public DatasetService(ApplicationContext context, IAuthService authService, INotificationService notificationService) 
+    public DatasetService(ApplicationContext context, IAuthService authService, INotificationService notificationService, IOptions<FileConfiguration> options) 
     {
         _context = context;
         _authService = authService;
         _notificationService = notificationService;
+        _config = options.Value;
     }
 
     public async Task<List<api.Dataset>> GetDatasets()
@@ -260,7 +263,16 @@ public class DatasetService : IDatasetService
         api.File fileAdded = new api.File();
         fileAdded.Id = fileNew.Id;
         fileAdded.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title };
-       
+
+        string uploads = Path.Combine(_config.Path, dataset.MetadataUuid);
+        if (file.Length > 0)
+        {
+            string filePath = Path.Combine(uploads, file.FileName);
+            using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+        }
 
         _notificationService.SendEmailUploadedFileToContact(fileNew);
 
