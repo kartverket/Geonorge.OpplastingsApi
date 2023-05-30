@@ -3,6 +3,7 @@ using Geonorge.OpplastingsApi.Models.Api;
 using Geonorge.OpplastingsApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Org.BouncyCastle.Utilities;
 using Serilog;
 using System;
@@ -208,13 +209,10 @@ namespace Geonorge.OpplastingsApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
         [RequestSizeLimit(1_048_576_000)]
-        [DisableFormValueModelBinding]
+        //[DisableFormValueModelBinding]
         public async Task<IActionResult> AddFile()
         {
-            var fileInfo = new FileNew(); fileInfo.datasetId = 1;
-            //todo get datasetId
-            //var datasetId = data["datasetId"].ToString();
-            //fileInfo.datasetId = Convert.ToUInt16(datasetId);
+            var fileInfo = new FileNew();
 
             if (!ModelState.IsValid)
             {
@@ -222,14 +220,21 @@ namespace Geonorge.OpplastingsApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var inputFiles = await _multipartRequestService.GetFilesFromMultipart();
+            var inputData = await _multipartRequestService.GetFormDataAndFilesFromMultipart();
 
-            if (inputFiles == null || !inputFiles.Files.Any())
+            if (inputData == null || !inputData.Files.Any())
                 return BadRequest();
 
             try
             {
-                var fileAdded = await _datasetService.AddFile(fileInfo, inputFiles.Files[0]);
+                var formData = inputData.Values.GetResults();
+                if (formData.ContainsKey("datasetId")) 
+                {
+                    formData.TryGetValue("datasetId", out StringValues datasetID);
+                    if(!string.IsNullOrEmpty(datasetID))
+                        fileInfo.datasetId = int.Parse(datasetID);
+                }
+                var fileAdded = await _datasetService.AddFile(fileInfo, inputData.Files[0]);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
             }

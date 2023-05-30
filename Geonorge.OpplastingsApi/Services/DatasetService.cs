@@ -270,7 +270,9 @@ public class DatasetService : IDatasetService
         string uploads = Path.Combine(_config.Path, dataset.MetadataUuid);
         if (file.Length > 0)
         {
-            //todo create folder
+            if (!Directory.Exists(uploads))
+                Directory.CreateDirectory(uploads);
+
             string filePath = Path.Combine(uploads, file.FileName);
             using (Stream fileStream = new FileStream(filePath, FileMode.Create))
             {
