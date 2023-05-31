@@ -1,5 +1,6 @@
 using Geonorge.OpplastingsApi.Middleware;
 using Geonorge.OpplastingsApi.Models.Api;
+using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,12 +20,14 @@ namespace Geonorge.OpplastingsApi.Controllers
         private readonly IDatasetService _datasetService;
         private readonly ILogger<DatasetController> _logger;
         private readonly IMultipartRequestService _multipartRequestService;
+        private readonly IAuthService _authService;
 
-        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger, IMultipartRequestService multipartRequestService) : base(logger)
+        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger, IMultipartRequestService multipartRequestService, IAuthService authService) : base(logger)
         {
             _datasetService = datasetService;
             _logger = logger;
             _multipartRequestService = multipartRequestService;
+            _authService = authService;
         }
 
         [HttpGet(Name = "GetDatasets")]
@@ -211,22 +214,25 @@ namespace Geonorge.OpplastingsApi.Controllers
         [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
         [RequestSizeLimit(1_048_576_000)]
         public async Task<IActionResult> AddFile()
-        {
-            var fileInfo = new FileNew();
-
+        {   
             if (!ModelState.IsValid)
             {
                 LogValidationErrors();
                 return BadRequest(ModelState);
             }
-
-            var inputData = await _multipartRequestService.GetFormDataAndFilesFromMultipart();
-
-            if (inputData == null || !inputData.Files.Any())
-                return BadRequest();
-
             try
             {
+                User user = await _authService.GetUser();
+                if (user == null)
+                    throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+
+                var fileInfo = new FileNew();
+
+                var inputData = await _multipartRequestService.GetFormDataAndFilesFromMultipart();
+
+                if (inputData == null || !inputData.Files.Any())
+                    return BadRequest();
+
                 var formData = inputData.Values.GetResults();
                 if (formData.ContainsKey("datasetId")) 
                 {
@@ -234,7 +240,7 @@ namespace Geonorge.OpplastingsApi.Controllers
                     if(!string.IsNullOrEmpty(datasetID))
                         fileInfo.datasetId = int.Parse(datasetID);
                 }
-                var fileAdded = await _datasetService.AddFile(fileInfo, inputData.Files[0]);
+                var fileAdded = await _datasetService.AddFile(fileInfo, inputData.Files[0], user);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
             }

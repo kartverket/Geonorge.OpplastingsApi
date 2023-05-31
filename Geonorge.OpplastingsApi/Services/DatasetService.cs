@@ -220,23 +220,21 @@ public class DatasetService : IDatasetService
 
         if (user.IsAdmin) 
         {
-            return new api.File { Id = file.Id, FileName = file.FileName };
+            return new api.File { Id = file.Id, FileName = file.FileName, Status = file.Status };
         }
 
         if (user.HasRole(Role.Editor))
         {
             if(file.Dataset.OwnerOrganization == user.OrganizationName)
-                return new api.File { Id = file.Id, FileName = file.FileName };
+                return new api.File { Id = file.Id, FileName = file.FileName, Status = file.Status };
             else if(file.UploaderUsername == user.Username)
-                return new api.File { Id = file.Id, FileName = file.FileName };
+                return new api.File { Id = file.Id, FileName = file.FileName, Status = file.Status };
         }
 
         throw new AuthorizationException("Manglende tilgang til ressursen");
     }
-    public async Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file)
+    public async Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file, User user)
     {
-        User user = await _authService.GetUser();
-
         if(user == null)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
@@ -264,7 +262,9 @@ public class DatasetService : IDatasetService
         await _context.SaveChangesAsync();
         api.File fileAdded = new api.File();
         fileAdded.Id = fileNew.Id;
-        fileAdded.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title };
+        fileAdded.FileName = fileNew.FileName;
+        fileAdded.Status = fileNew.Status;
+        fileAdded.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName, MetadataUuid = dataset.MetadataUuid };
 
         string uploads = Path.Combine(_config.Path, dataset.MetadataUuid);
         if (file.Length > 0)
@@ -314,7 +314,7 @@ public class DatasetService : IDatasetService
                 _notificationService.SendEmailStatusChangedToUploader(fileData);
         }
 
-        return new api.File { Id = fileData.Id, FileName = fileData.FileName };
+        return new api.File { Id = fileData.Id, FileName = fileData.FileName, Status = fileData.Status };
     }
 
     public async Task<api.File> RemoveFile(int id)
@@ -399,7 +399,7 @@ public interface IDatasetService
 
     Task<api.File> GetFile(int id);
     Task<string> GetFilePath(int id);
-    Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file);
+    Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file, User user);
     Task<api.File> UpdateFile(int id, api.FileUpdate fileInfo);
     Task<api.File> RemoveFile(int id);
 }
