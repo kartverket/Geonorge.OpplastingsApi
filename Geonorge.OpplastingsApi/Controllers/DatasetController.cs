@@ -256,7 +256,7 @@ namespace Geonorge.OpplastingsApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateFile(int id, FileUpdate file)
+        public async Task<IActionResult> UpdateFile(int id, FileUpdate fileInfo)
         {
             if (!ModelState.IsValid)
             {
@@ -265,7 +265,7 @@ namespace Geonorge.OpplastingsApi.Controllers
             }
             try
             {
-                var fileUpdated = await _datasetService.UpdateFile(id, file, null);
+                var fileUpdated = await _datasetService.UpdateFile(id, fileInfo);
 
                 return Ok(fileUpdated);
             }
@@ -304,31 +304,6 @@ namespace Geonorge.OpplastingsApi.Controllers
                 throw;
             }
 
-        }
-
-        [HttpPut("file-status-change/{id:int}", Name = "PutFileStatusChange")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(File))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateFileStatusChange(int id, string status)
-        {
-            try
-            {
-                var fileUpdated= await _datasetService.FileStatusChange(id, status);
-
-                return Ok(fileUpdated);
-            }
-            catch (Exception ex)
-            {
-                var result = HandleException(ex);
-
-                if (result != null)
-                    return result;
-
-                throw;
-            }
         }
 
         private void LogValidationErrors()
