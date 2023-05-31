@@ -42,7 +42,7 @@ public class DatasetService : IDatasetService
         }
         else if (user.HasRole(Role.Editor)) 
         {
-            var datasetsOwner = await _context.Datasets.Where(d => d.OwnerOrganization == user.OrganizationName && user.Roles.Contains(d.RequiredRole)).Select(
+            var datasetsOwner = await _context.Datasets.Where(d => d.OwnerOrganization == user.OrganizationName).Select(
                 d => new api.Dataset
                 {
                     Id = d.Id,
@@ -81,7 +81,7 @@ public class DatasetService : IDatasetService
         if (user == null)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        var dataset = await _context.Datasets.Where(d => d.Id == id && ((d.OwnerOrganization == user.OrganizationName && user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(
+        var dataset = await _context.Datasets.Where(d => d.Id == id && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).Select(
             d => new api.Dataset
             {
                 Id=d.Id,
@@ -91,22 +91,6 @@ public class DatasetService : IDatasetService
             }
             ).FirstOrDefaultAsync();
 
-        if(dataset == null) 
-        {
-            dataset = await _context.Datasets.Where(d => d.Id == id && (user.Roles.Contains(d.RequiredRole))).Select(
-            d => new api.Dataset
-            {
-                Id = d.Id,
-                Title = d.Title,
-                ContactEmail = d.ContactEmail,
-                ContactName = d.ContactName,
-                MetadataUuid = d.MetadataUuid,
-                OwnerOrganization = d.OwnerOrganization,
-                RequiredRole = d.RequiredRole,
-                Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
-            }
-            ).FirstOrDefaultAsync();
-        }
         if (dataset == null)
             throw new Exception("Ingen datasett funnet");
 
@@ -238,7 +222,7 @@ public class DatasetService : IDatasetService
         if(user == null)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.datasetId && ((user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
+        var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.datasetId && ((d.OwnerOrganization == user.OrganizationName || user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
 
         if (dataset == null)
             throw new Exception("Datasett ikke tilgjengelig");
