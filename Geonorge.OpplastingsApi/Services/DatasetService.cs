@@ -351,7 +351,7 @@ public class DatasetService : IDatasetService
         return new api.File {  Id = file.Id, FileName = file.FileName};
     }
 
-    public async Task<string> DownloadFile(int id)
+    public async Task<string> GetFilePath(int id)
     {
         User user = await _authService.GetUser();
 
@@ -384,8 +384,9 @@ public class DatasetService : IDatasetService
                 _notificationService.SendEmailStatusChangedToUploader(file);
             }
         }
-
-        return file.FileName; // todo stream file
+        string path = Path.Combine(_config.Path, file.Dataset.MetadataUuid);
+        string filePath = Path.Combine(path, file.FileName);
+        return filePath;
     }
 }
 
@@ -398,7 +399,7 @@ public interface IDatasetService
     Task<api.Dataset> RemoveDataset(int id);
 
     Task<api.File> GetFile(int id);
-    Task<string> DownloadFile(int id);
+    Task<string> GetFilePath(int id);
     Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file);
     Task<api.File> UpdateFile(int id, api.FileUpdate fileInfo);
     Task<api.File> RemoveFile(int id);

@@ -188,7 +188,9 @@ namespace Geonorge.OpplastingsApi.Controllers
         {
             try
             {
-                return Ok(await _datasetService.DownloadFile(id));
+                var filePath = await _datasetService.GetFilePath(id);
+                return File(System.IO.File.ReadAllBytes(filePath), "application/octet-stream", System.IO.Path.GetFileName(filePath));
+
             }
             catch (Exception ex)
             {
