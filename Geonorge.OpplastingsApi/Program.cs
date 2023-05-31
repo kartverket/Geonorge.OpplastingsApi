@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Net;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "Opplastings-API",
+        Description = "Opplasting av geografiske data som kan berike nasjonale fagbaser",
+        Contact = new OpenApiContact
+        {
+            Name = "Geonorge",
+            Url = new Uri("https://www.geonorge.no/aktuelt/om-geonorge/")
+        },
+    });
+
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
     options.OperationFilter<FileUploadOperation>();
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
