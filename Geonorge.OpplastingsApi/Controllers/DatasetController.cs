@@ -210,7 +210,6 @@ namespace Geonorge.OpplastingsApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
         [RequestSizeLimit(1_048_576_000)]
-        //[DisableFormValueModelBinding]
         public async Task<IActionResult> AddFile()
         {
             var fileInfo = new FileNew();
