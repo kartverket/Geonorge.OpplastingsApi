@@ -293,11 +293,11 @@ public class DatasetService : IDatasetService
 
         var fileData = await _context.Files.Where(f => f.Id == fileUpdated.datasetId).Include(d => d.Dataset).FirstOrDefaultAsync();
 
-        if (!user.IsAdmin 
-            || !(user.HasRole(Role.Editor ) && fileData.Dataset.OwnerOrganization == user.OrganizationName)
-            || !(user.HasRole(Role.Editor) && fileData.UploaderUsername == user.Username)
-            )
-        {
+        if (!user.IsAdmin)
+            if (!(user.HasRole(Role.Editor) && fileData.Dataset.OwnerOrganization == user.OrganizationName)
+             || !(user.HasRole(Role.Editor) && fileData.UploaderUsername == user.Username)
+             )
+            {
             throw new AuthorizationException("Brukeren har ikke tilgang");
         }
 
@@ -363,8 +363,8 @@ public class DatasetService : IDatasetService
         if (file == null)
             throw new Exception("Filen ble ikke funnnet");
 
-        if (!user.IsAdmin
-             || !(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
+        if (!user.IsAdmin)
+            if (!(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
              || !(user.HasRole(Role.Editor) && file.UploaderUsername == user.Username)
              )
         {
