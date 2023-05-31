@@ -242,11 +242,11 @@ public class DatasetService : IDatasetService
 
         var dataset = _context.Datasets.Where((d) => d.Id == fileInfo.datasetId && ((user.Roles.Contains(d.RequiredRole)) || user.IsAdmin)).FirstOrDefault();
 
-        if (dataset.Files == null)
-            dataset.Files = new List<Geonorge.OpplastingsApi.Models.Entity.File>();
-
         if (dataset == null)
             throw new Exception("Datasett ikke tilgjengelig");
+
+        if (dataset.Files == null)
+            dataset.Files = new List<Geonorge.OpplastingsApi.Models.Entity.File>();
 
         var fileNew = new Geonorge.OpplastingsApi.Models.Entity.File
         {
@@ -261,7 +261,6 @@ public class DatasetService : IDatasetService
 
 
         dataset.Files.Add(fileNew);
-        //todo check error save
         await _context.SaveChangesAsync();
         api.File fileAdded = new api.File();
         fileAdded.Id = fileNew.Id;
