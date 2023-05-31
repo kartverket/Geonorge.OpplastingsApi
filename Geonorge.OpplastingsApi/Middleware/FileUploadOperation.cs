@@ -25,7 +25,7 @@ namespace Geonorge.OpplastingsApi.Middleware
                 // NOT required for form type
                 //return;
             }
-            if (context.ApiDescription.HttpMethod == HttpMethod.Post.Method)
+            if (context.ApiDescription.HttpMethod == HttpMethod.Post.Method && context.ApiDescription.RelativePath == "Dataset/file")
             {
                 var uploadFileMediaType = new OpenApiMediaType()
                 {
