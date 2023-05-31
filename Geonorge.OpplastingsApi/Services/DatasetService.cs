@@ -315,8 +315,6 @@ public class DatasetService : IDatasetService
                 _notificationService.SendEmailStatusChangedToUploader(fileData);
         }
 
-        //todo update file in folder
-
         return new api.File { Id = fileData.Id, FileName = fileData.FileName };
     }
 
@@ -329,8 +327,8 @@ public class DatasetService : IDatasetService
 
         var file = await _context.Files.Where(f => f.Id == id).Include(d => d.Dataset).FirstOrDefaultAsync();
 
-        if (!user.IsAdmin
-             || !(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
+        if (!user.IsAdmin)
+            if( !(user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName)
              || !(user.HasRole(Role.Editor) && file.UploaderUsername == user.Username)
              )
         {
@@ -343,7 +341,12 @@ public class DatasetService : IDatasetService
             _context.SaveChangesAsync();
         }
 
-        //todo remove file from folder
+        string path = Path.Combine(_config.Path, file.Dataset.MetadataUuid);
+        string filePath = Path.Combine(path, file.FileName);
+        if (System.IO.File.Exists(filePath)) 
+        {
+            System.IO.File.Delete(filePath);
+        }
 
         return new api.File {  Id = file.Id, FileName = file.FileName};
     }
