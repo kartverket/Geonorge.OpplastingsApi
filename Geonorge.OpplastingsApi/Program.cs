@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 
@@ -100,13 +101,29 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 var app = builder.Build();
 
-app.UseSwagger();
-
-app.UseSwaggerUI(swagger =>
-{    
-    var url = $"{(!app.Environment.IsLocal() ? "/api" : "")}/swagger/v1/swagger.json";
-    swagger.SwaggerEndpoint(url, "Geonorge.OpplastingsApi API V1");
+app.UseSwagger(options =>
+{
+    options.RouteTemplate = "docs/{documentName}/openapi.json";
 });
+
+app.UseStaticFiles();
+
+//app.UseSwaggerUI(swagger =>
+//{    
+//    var url = $"{(!app.Environment.IsLocal() ? "/api" : "")}/swagger/v1/swagger.json";
+//    swagger.SwaggerEndpoint(url, "Geonorge.OpplastingsApi API V1");
+//});
+
+app.UseSwaggerUI(options =>
+{
+    var url = $"{(!app.Environment.IsLocal() ? "/api" : "")}/docs/v1/openapi.json";
+    options.SwaggerEndpoint(url, "Opplastings-api v1");
+    url = $"{(!app.Environment.IsLocal() ? "/api" : "")}/custom.css";
+    options.InjectStylesheet(url);
+
+    options.RoutePrefix = "docs";
+});
+
 
 app.UseHttpsRedirection();
 
