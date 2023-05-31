@@ -179,7 +179,6 @@ namespace Geonorge.OpplastingsApi.Controllers
         }
 
         [HttpGet("download-file/{id:int}")]
-        //todo return filestream
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileContentResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
