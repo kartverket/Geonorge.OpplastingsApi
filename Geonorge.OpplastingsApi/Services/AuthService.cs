@@ -41,7 +41,7 @@ namespace Geonorge.OpplastingsApi.Services
                user = await GetUserFromToken(authToken);
 
             if (user == null)
-                throw new UnauthorizedAccessException("Manglende eller feil autorisering");//user = GetTestUser();
+                /*throw new UnauthorizedAccessException("Manglende eller feil autorisering");*/ user = GetTestUser(); // todo remove
 
                 return user;
         }
@@ -161,7 +161,7 @@ namespace Geonorge.OpplastingsApi.Services
         private User GetTestUser()
         {
             //test data
-            return new User { OrganizationName = "Kartverket", Roles = new List<string>() { Role.Admin, "nd.datast1" } };
+            return new User { OrganizationName = "Kartverket", Email = "utvikling@arkitektum.no", Name = "Ola Nordmann", Username = "testbruker" , Roles = new List<string>() { Role.Admin, "nd.datast1" } };
         }
     }
 
