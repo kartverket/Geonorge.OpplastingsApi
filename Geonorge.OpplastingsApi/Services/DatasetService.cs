@@ -354,19 +354,6 @@ public class DatasetService : IDatasetService
             throw new AuthorizationException("Brukeren har ikke tilgang");
         }
 
-        if (user.HasRole(Role.Editor) && file.Dataset.OwnerOrganization == user.OrganizationName || user.IsAdmin)
-        {
-            var currentStatus = file.Status;
-
-            if (currentStatus == "Sendt inn")
-            {
-                file.Status = "I progress";
-                _context.Files.Update(file);
-                _context.SaveChangesAsync();
-
-                _notificationService.SendEmailStatusChangedToUploader(file);
-            }
-        }
         string path = Path.Combine(_config.Path, file.Dataset.MetadataUuid);
         string filePath = Path.Combine(path, file.FileName);
         return filePath;
