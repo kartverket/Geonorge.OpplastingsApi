@@ -1,4 +1,5 @@
-﻿using Geonorge.OpplastingsApi.Models.Api.User;
+﻿using Geonorge.OpplastingsApi.Models;
+using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
 using Microsoft.EntityFrameworkCore;
@@ -234,7 +235,7 @@ public class DatasetService : IDatasetService
         {
             FileName = file.FileName,
             Date = DateTime.Now,
-            Status = "Lastet opp",
+            Status = Const.Status.Submitted,
             UploaderOrganization = user.OrganizationName,
             UploaderPerson = user.Name,
             UploaderEmail = user.Email,

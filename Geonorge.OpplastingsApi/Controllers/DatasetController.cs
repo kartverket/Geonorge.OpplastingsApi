@@ -1,4 +1,5 @@
 using Geonorge.OpplastingsApi.Middleware;
+using Geonorge.OpplastingsApi.Models;
 using Geonorge.OpplastingsApi.Models.Api;
 using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Services;
@@ -309,6 +310,19 @@ namespace Geonorge.OpplastingsApi.Controllers
 
                 throw;
             }
+
+        }
+
+
+        [HttpGet("file/statuses", Name = "GetStatuses")]
+        public async Task<IActionResult> GetStatuses()
+        {
+            Dictionary<string, string> statuses = new Dictionary<string, string>();
+            statuses.Add("Submitted", Const.Status.Submitted);
+            statuses.Add("InProcess", Const.Status.InProcess);
+            statuses.Add("Valid", Const.Status.Valid);
+            statuses.Add("Invalid", Const.Status.Invalid);
+            return Ok(statuses);
 
         }
 
