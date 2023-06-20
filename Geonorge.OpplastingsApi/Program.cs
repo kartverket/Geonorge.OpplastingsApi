@@ -94,12 +94,22 @@ builder.Services.Configure<AuthConfiguration>(configuration.GetSection(AuthConfi
 builder.Services.Configure<NotificationConfiguration>(configuration.GetSection(NotificationConfiguration.SectionName));
 builder.Services.Configure<FileConfiguration>(configuration.GetSection(FileConfiguration.SectionName));
 
+builder.Services.AddCors();
+
+
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
 
 var app = builder.Build();
+
+app.UseCors(options =>
+{
+    options.AllowAnyOrigin();
+    options.AllowAnyMethod();
+    options.AllowAnyHeader();
+});
 
 app.UseSwagger(options =>
 {
