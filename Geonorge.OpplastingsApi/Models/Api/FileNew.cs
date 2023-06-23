@@ -15,9 +15,9 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// <example>gravplass.gml</example>
         public string FileName { get; set; }
         /// <summary>
-        /// Default status Lastet opp
+        /// Default status Sendt inn
         /// </summary>
-        /// <example>Lastet opp</example>
+        /// <example>Sendt inn</example>
         public string Status { get; set; }
         /// <summary>
         /// Referanse til datasett id

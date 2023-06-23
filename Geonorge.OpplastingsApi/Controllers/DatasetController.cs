@@ -238,8 +238,19 @@ namespace Geonorge.OpplastingsApi.Controllers
                 if (formData.ContainsKey("datasetId")) 
                 {
                     formData.TryGetValue("datasetId", out StringValues datasetID);
-                    if(!string.IsNullOrEmpty(datasetID))
+                    if (!string.IsNullOrEmpty(datasetID)) { 
                         fileInfo.datasetId = int.Parse(datasetID);
+                        var dataset = await _datasetService.GetDataset(fileInfo.datasetId);
+
+                        var supportedTypes = dataset.AllowedFileFormats.Select(f => f.Extension).ToList();
+                        var fileExt = System.IO.Path.GetExtension(inputData.Files[0].FileName).Substring(1);
+                        if (!supportedTypes.Contains(fileExt))
+                        {
+                            throw new Exception("Gyldig filendelse er: " + string.Join(",", supportedTypes));
+                        }
+                    }
+                    else
+                        throw new Exception("DatesetId not found");
                 }
                 var fileAdded = await _datasetService.AddFile(fileInfo, inputData.Files[0], user);
 
@@ -323,6 +334,13 @@ namespace Geonorge.OpplastingsApi.Controllers
             statuses.Add("Valid", Const.Status.Valid);
             statuses.Add("Invalid", Const.Status.Invalid);
             return Ok(statuses);
+
+        }
+
+        [HttpGet("fileformats", Name = "GetFileFormats")]
+        public async Task<IActionResult> GetFileFormats()
+        {
+            return Ok(await _datasetService.GetFileFormats());
 
         }
 

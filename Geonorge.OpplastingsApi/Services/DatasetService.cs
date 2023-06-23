@@ -1,9 +1,11 @@
 ﻿using Geonorge.OpplastingsApi.Models;
+using Geonorge.OpplastingsApi.Models.Api;
 using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Data;
 using api = Geonorge.OpplastingsApi.Models.Api;
 
 public class DatasetService : IDatasetService
@@ -37,8 +39,9 @@ public class DatasetService : IDatasetService
                         Id = d.Id,
                         Title = d.Title,
                         ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
-                        Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList()
-                    }
+                        Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList(),
+                    AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
+                }
                 ).ToListAsync();
         }
         else if (user.HasRole(Role.Editor)) 
@@ -49,7 +52,8 @@ public class DatasetService : IDatasetService
                     Id = d.Id,
                     Title = d.Title,
                     ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
-                    Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
+                    Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
+                    AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
                 ).ToListAsync();
 
@@ -61,7 +65,8 @@ public class DatasetService : IDatasetService
                 {
                     Id = d.Id,
                     Title = d.Title,
-                    Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
+                    Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
+                    AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
                 ).ToListAsync();
 
@@ -88,7 +93,8 @@ public class DatasetService : IDatasetService
                 Id=d.Id,
                 Title = d.Title,
                 ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
-                Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList()
+                Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
+                AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
             }
             ).FirstOrDefaultAsync();
 
@@ -108,20 +114,29 @@ public class DatasetService : IDatasetService
         if (!user.IsAdmin)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        var dataset = new Dataset
+        var dataset = new Geonorge.OpplastingsApi.Models.Entity.Dataset
         {
             Title = datasetNew.Title,
             MetadataUuid = datasetNew.MetadataUuid,
             ContactEmail = datasetNew.ContactEmail,
             ContactName = datasetNew.ContactName,
             OwnerOrganization = datasetNew.OwnerOrganization,
-            RequiredRole = datasetNew.RequiredRole
+            RequiredRole = datasetNew.RequiredRole,
+            AllowedFileFormats = new List<Geonorge.OpplastingsApi.Models.Entity.FileFormat>()
         };
+        foreach (var format in datasetNew.AllowedFileFormats)
+        {
+            var formatExtension = _context.FileFormats.Where(f => f.Extension == format).FirstOrDefault();
+            if(formatExtension != null)
+                dataset.AllowedFileFormats.Add(formatExtension);
+        }
         await _context.Datasets.AddAsync(dataset);
         await _context.SaveChangesAsync();
 
         return new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail,
-            ContactName = dataset.ContactName, MetadataUuid=dataset.MetadataUuid, OwnerOrganization = dataset.OwnerOrganization, RequiredRole = dataset.RequiredRole };
+            ContactName = dataset.ContactName, MetadataUuid = dataset.MetadataUuid, OwnerOrganization = dataset.OwnerOrganization, RequiredRole = dataset.RequiredRole,
+             AllowedFileFormats = dataset.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
+        };
 
     }
 
@@ -135,7 +150,7 @@ public class DatasetService : IDatasetService
         if (!user.IsAdmin)
             throw new AuthorizationException("Brukeren har ikke tilgang");
 
-        var dataset = await _context.Datasets.Where(d => d.Id == id).FirstOrDefaultAsync();
+        var dataset = await _context.Datasets.Where(d => d.Id == id).Include(f => f.AllowedFileFormats).FirstOrDefaultAsync();
 
         if (dataset == null)
             throw new Exception("Datasettet finnes ikke");
@@ -158,6 +173,23 @@ public class DatasetService : IDatasetService
         if (!string.IsNullOrEmpty(datasetUpdated.RequiredRole))
             dataset.RequiredRole = datasetUpdated.RequiredRole;
 
+        if(dataset.AllowedFileFormats != null) 
+        { 
+            foreach (var item in dataset.AllowedFileFormats.ToList()) 
+            {
+                dataset.AllowedFileFormats.Remove(item);
+            }
+        }
+
+        dataset.AllowedFileFormats = new List<Geonorge.OpplastingsApi.Models.Entity.FileFormat>();
+
+        foreach (var format in datasetUpdated.AllowedFileFormats)
+        {
+            var formatExtension = _context.FileFormats.Where(f => f.Extension == format).FirstOrDefault();
+            if (formatExtension != null)
+                dataset.AllowedFileFormats.Add(formatExtension);
+        }
+
         _context.SaveChanges();
 
         return new api.Dataset 
@@ -165,7 +197,8 @@ public class DatasetService : IDatasetService
             Id = dataset.Id, Title = dataset.Title,
             ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName,
             MetadataUuid = dataset.MetadataUuid, RequiredRole = dataset.RequiredRole,
-            OwnerOrganization=dataset.OwnerOrganization
+            OwnerOrganization=dataset.OwnerOrganization,
+            AllowedFileFormats = dataset.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
         };
     }
 
@@ -359,6 +392,11 @@ public class DatasetService : IDatasetService
         string filePath = Path.Combine(path, file.FileName);
         return filePath;
     }
+
+    public async Task<List<api.FileFormat>> GetFileFormats()
+    {
+        return await _context.FileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToListAsync();
+    }
 }
 
 public interface IDatasetService
@@ -374,4 +412,5 @@ public interface IDatasetService
     Task<api.File> AddFile(api.FileNew fileInfo, IFormFile file, User user);
     Task<api.File> UpdateFile(int id, api.FileUpdate fileInfo);
     Task<api.File> RemoveFile(int id);
+    Task<List<api.FileFormat>> GetFileFormats();
 }

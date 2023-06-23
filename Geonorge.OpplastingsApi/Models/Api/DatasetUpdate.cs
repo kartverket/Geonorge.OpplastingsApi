@@ -45,5 +45,11 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// <example>nd.gjenbruk_gravplass</example>
         [Required]
         public string RequiredRole { get; set; }
+        /// <summary>
+        /// Lovlige filformater (filendelser)
+        /// </summary>
+        /// <example>[&quot;gml&quot;]</example>
+        [Required]
+        public List<string>? AllowedFileFormats { get; set; }
     }
 }

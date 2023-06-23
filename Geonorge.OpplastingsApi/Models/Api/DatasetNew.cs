@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Geonorge.OpplastingsApi.Models.Entity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Geonorge.OpplastingsApi.Models.Api
 {
@@ -40,5 +41,11 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// <example>nd.gjenbruk_gravplass</example>
         [Required]
         public string RequiredRole { get; set; }
+        /// <summary>
+        /// Lovlige filformater (filendelser)
+        /// </summary>
+        /// <example>[&quot;gml&quot;]</example>
+        [Required]
+        public List<string>? AllowedFileFormats { get; set; }
     }
 }
