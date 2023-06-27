@@ -24,7 +24,7 @@ namespace Geonorge.OpplastingsApi.Models.Api
             set => Files = value ?? new();
         }
 
-
+        public bool RequireValidFile { get; set; }
 
     }
 }

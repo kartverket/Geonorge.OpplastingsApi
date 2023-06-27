@@ -38,7 +38,7 @@ public class DatasetService : IDatasetService
                     {
                         Id = d.Id,
                         Title = d.Title,
-                        ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
+                        ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile = d.RequireValidFile,
                         Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
@@ -51,7 +51,7 @@ public class DatasetService : IDatasetService
                 {
                     Id = d.Id,
                     Title = d.Title,
-                    ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
+                    ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile=d.RequireValidFile,
                     Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
@@ -65,6 +65,7 @@ public class DatasetService : IDatasetService
                 {
                     Id = d.Id,
                     Title = d.Title,
+                    RequireValidFile = d.RequireValidFile,
                     Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
@@ -93,6 +94,7 @@ public class DatasetService : IDatasetService
                 Id=d.Id,
                 Title = d.Title,
                 ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
+                RequireValidFile = d.RequireValidFile,
                 Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
                 AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
             }
@@ -122,6 +124,7 @@ public class DatasetService : IDatasetService
             ContactName = datasetNew.ContactName,
             OwnerOrganization = datasetNew.OwnerOrganization,
             RequiredRole = datasetNew.RequiredRole,
+            RequireValidFile = datasetNew.RequireValidFile,
             AllowedFileFormats = new List<Geonorge.OpplastingsApi.Models.Entity.FileFormat>()
         };
         foreach (var format in datasetNew.AllowedFileFormats)
@@ -134,7 +137,7 @@ public class DatasetService : IDatasetService
         await _context.SaveChangesAsync();
 
         return new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail,
-            ContactName = dataset.ContactName, MetadataUuid = dataset.MetadataUuid, OwnerOrganization = dataset.OwnerOrganization, RequiredRole = dataset.RequiredRole,
+            ContactName = dataset.ContactName, MetadataUuid = dataset.MetadataUuid, OwnerOrganization = dataset.OwnerOrganization, RequiredRole = dataset.RequiredRole, RequireValidFile = dataset.RequireValidFile,
              AllowedFileFormats = dataset.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
         };
 
@@ -173,7 +176,9 @@ public class DatasetService : IDatasetService
         if (!string.IsNullOrEmpty(datasetUpdated.RequiredRole))
             dataset.RequiredRole = datasetUpdated.RequiredRole;
 
-        if(dataset.AllowedFileFormats != null) 
+        dataset.RequireValidFile = datasetUpdated.RequireValidFile;
+
+        if (dataset.AllowedFileFormats != null) 
         { 
             foreach (var item in dataset.AllowedFileFormats.ToList()) 
             {
@@ -196,7 +201,7 @@ public class DatasetService : IDatasetService
         { 
             Id = dataset.Id, Title = dataset.Title,
             ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName,
-            MetadataUuid = dataset.MetadataUuid, RequiredRole = dataset.RequiredRole,
+            MetadataUuid = dataset.MetadataUuid, RequiredRole = dataset.RequiredRole, RequireValidFile = dataset.RequireValidFile,  
             OwnerOrganization=dataset.OwnerOrganization,
             AllowedFileFormats = dataset.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
         };

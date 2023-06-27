@@ -47,5 +47,10 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// <example>[&quot;gml&quot;]</example>
         [Required]
         public List<string>? AllowedFileFormats { get; set; }
+        /// <summary>
+        /// Kreve at fil må være gyldig for å få legge inn
+        /// </summary>
+        /// <example>true</example>
+        public bool RequireValidFile { get; set; }
     }
 }

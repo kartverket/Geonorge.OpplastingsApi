@@ -24,6 +24,8 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         [Required]
         public string RequiredRole { get; set; }
 
+        public bool RequireValidFile { get; set; }
+
         public virtual List<File>? Files { get; set; }
 
         public virtual List<FileFormat>? AllowedFileFormats { get; set; }
