@@ -252,6 +252,9 @@ namespace Geonorge.OpplastingsApi.Controllers
                     else
                         throw new Exception("DatesetId not found");
                 }
+
+                //todo include validator, check if requireValidFile
+
                 var fileAdded = await _datasetService.AddFile(fileInfo, inputData.Files[0], user);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
