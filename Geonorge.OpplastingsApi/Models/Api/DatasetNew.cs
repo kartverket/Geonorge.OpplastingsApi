@@ -22,6 +22,7 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// </summary>
         /// <example>epost@epost.no</example>
         [Required]
+        [EmailAddress]
         public string ContactEmail { get; set; }
         /// <summary>
         /// Fullt navn på kontaktpersonen
