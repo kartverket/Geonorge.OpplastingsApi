@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
-
-namespace Geonorge.OpplastingsApi.Models.Api
+﻿namespace Geonorge.OpplastingsApi.Models.Api
 {
     public class InputData
     {
-        public KeyValueAccumulator Values { get; set; }
-        public List<IFormFile> Files { get; set; } = new();
+        public IFormFile File { get; set; }
+        public FileNew FileInfo { get; set; } = new();
+        public bool RequireValidFile { get; set; }
     }
 }

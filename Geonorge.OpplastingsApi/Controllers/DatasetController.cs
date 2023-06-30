@@ -1,14 +1,11 @@
-using Geonorge.OpplastingsApi.Middleware;
+using Geonorge.OpplastingsApi.HttpClients;
 using Geonorge.OpplastingsApi.Models;
 using Geonorge.OpplastingsApi.Models.Api;
 using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Services;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using Org.BouncyCastle.Utilities;
-using Serilog;
-using System;
 using System.IO;
 using File = Geonorge.OpplastingsApi.Models.Api.File;
 
@@ -21,14 +18,24 @@ namespace Geonorge.OpplastingsApi.Controllers
         private readonly IDatasetService _datasetService;
         private readonly ILogger<DatasetController> _logger;
         private readonly IMultipartRequestService _multipartRequestService;
+        private readonly IValidatorHttpClient _validatorHttpClient;
+        private readonly IMessageService _messageService;
         private readonly IAuthService _authService;
 
-        public DatasetController(IDatasetService datasetService, ILogger<DatasetController> logger, IMultipartRequestService multipartRequestService, IAuthService authService) : base(logger)
+        public DatasetController(
+            IDatasetService datasetService, 
+            IMultipartRequestService multipartRequestService, 
+            IAuthService authService,
+            IValidatorHttpClient validatorHttpClient,
+            IMessageService messageService,
+            ILogger<DatasetController> logger) : base(logger)
         {
             _datasetService = datasetService;
-            _logger = logger;
             _multipartRequestService = multipartRequestService;
             _authService = authService;
+            _validatorHttpClient = validatorHttpClient;
+            _messageService = messageService;
+            _logger = logger;
         }
 
         [HttpGet(Name = "GetDatasets")]
@@ -221,41 +228,31 @@ namespace Geonorge.OpplastingsApi.Controllers
                 LogValidationErrors();
                 return BadRequest(ModelState);
             }
+
             try
             {
-                User user = await _authService.GetUser();
-                if (user == null)
-                    throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
+                var user = await _authService.GetUser() ?? throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-                var fileInfo = new FileNew();
+                var inputData = await _multipartRequestService.GetInputDataFromMultipartAsync();
 
-                var inputData = await _multipartRequestService.GetFormDataAndFilesFromMultipart();
-
-                if (inputData == null || !inputData.Files.Any())
+                if (inputData?.File == null)
                     return BadRequest();
 
-                var formData = inputData.Values.GetResults();
-                if (formData.ContainsKey("datasetId")) 
-                {
-                    formData.TryGetValue("datasetId", out StringValues datasetID);
-                    if (!string.IsNullOrEmpty(datasetID)) { 
-                        fileInfo.datasetId = int.Parse(datasetID);
-                        var dataset = await _datasetService.GetDataset(fileInfo.datasetId);
+                await CheckFileExtensionValidity(inputData);
 
-                        var supportedTypes = dataset.AllowedFileFormats.Select(f => f.Extension).ToList();
-                        var fileExt = System.IO.Path.GetExtension(inputData.Files[0].FileName).Substring(1);
-                        if (!supportedTypes.Contains(fileExt))
-                        {
-                            throw new Exception("Gyldig filendelse er: " + string.Join(",", supportedTypes));
-                        }
+                if (inputData.RequireValidFile)
+                {
+                    await _messageService.SendAsync("Validerer...");
+
+                    var validationReport = await _validatorHttpClient.ValidateAsync(inputData.File);
+
+                    if (validationReport.Errors > 0)
+                    {
+                        // Noe greier her...
                     }
-                    else
-                        throw new Exception("DatesetId not found");
                 }
 
-                //todo include validator, check if requireValidFile
-
-                var fileAdded = await _datasetService.AddFile(fileInfo, inputData.Files[0], user);
+                var fileAdded = await _datasetService.AddFile(inputData.FileInfo, inputData.File, user);
 
                 return Created("/Dataset/" + fileAdded.Id, fileAdded);
             }
@@ -268,7 +265,6 @@ namespace Geonorge.OpplastingsApi.Controllers
 
                 throw;
             }
-
         }
 
         [HttpPut("file/{id:int}", Name = "PutFile")]
@@ -359,6 +355,20 @@ namespace Geonorge.OpplastingsApi.Controllers
                         x.Exception
                     })
                 }));
+        }
+
+        private async Task CheckFileExtensionValidity(InputData inputData)
+        {
+            var dataset = await _datasetService.GetDataset(inputData.FileInfo.datasetId);
+
+            var supportedTypes = dataset.AllowedFileFormats
+                .Select(fileFormat => fileFormat.Extension)
+                .ToList();
+
+            var fileExt = Path.GetExtension(inputData.File.FileName)[1..];
+
+            if (!supportedTypes.Contains(fileExt))
+                throw new Exception($"Ugyldig filendelse. Gyldig filendelser er: {string.Join(", ", supportedTypes)}");
         }
 
     }

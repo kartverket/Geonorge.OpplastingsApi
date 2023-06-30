@@ -1,8 +1,6 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.OpenApi.Models;
-using Org.BouncyCastle.Utilities;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Geonorge.OpplastingsApi.Middleware
@@ -33,22 +31,22 @@ namespace Geonorge.OpplastingsApi.Middleware
                     {
                         Type = "object",
                         Properties =
-                    {
-                        ["files"] = new OpenApiSchema()
                         {
-                            Type = "array",
-                            Items = new OpenApiSchema()
+                            ["file"] = new OpenApiSchema()
                             {
-                                Type="file",
-                                Format="binary"
+                                Type = "file",
+                                Format = "binary"
+                            },
+                            ["datasetId"] = new OpenApiSchema()
+                            {
+                                Type = "int"
+                            },
+                            ["requireValidFile"] = new OpenApiSchema()
+                            {
+                                Type = "boolean"
                             }
                         },
-                        ["datasetId"] = new OpenApiSchema()
-                        {
-                            Type = "int"
-                        }
-                    },
-                        Required = new HashSet<string>() { "files" },
+                        Required = new HashSet<string>() { "file", "datasetId" },
                     }
                 };
 

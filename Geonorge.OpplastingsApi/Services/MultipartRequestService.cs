@@ -10,57 +10,56 @@ namespace Geonorge.OpplastingsApi.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MultipartRequestService(IHttpContextAccessor httpContextAccessor)
+        public MultipartRequestService(
+            IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<InputData> GetFormDataAndFilesFromMultipart()
+        public async Task<InputData> GetInputDataFromMultipartAsync()
         {
-
             var request = _httpContextAccessor.HttpContext.Request;
-            var inputData = new InputData();
             var reader = new MultipartReader(request.GetMultipartBoundary(), request.Body);
-            MultipartSection section;
-
             var formAccumulator = new KeyValueAccumulator();
+            IFormFile file = null;
+            MultipartSection section;
 
             try
             {
                 while ((section = await reader.ReadNextSectionAsync()) != null)
                 {
-
                     if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
-                    {
                         continue;
-                    }
-
-                    if (contentDisposition.IsFormDisposition())
-                    {
-                        formAccumulator = await AccumulateForm(formAccumulator, section, contentDisposition);
-                        inputData.Values = formAccumulator;
-                    }
-                    else if (contentDisposition.IsFileDisposition()) { 
 
                     var name = contentDisposition.Name.Value;
 
-                    var fileName =  contentDisposition.FileName;
-
-                    inputData.Files.Add(await CreateFormFile(contentDisposition, section));
-
+                    if (contentDisposition.IsFileDisposition() && name == "file" && file == null)
+                    {
+                        file = await CreateFormFileAsync(contentDisposition, section);
                     }
-
+                    else if (contentDisposition.IsFormDisposition() && (name == "datasetId" || name == "requireValidFile"))
+                    {
+                        formAccumulator = await AccumulateFormAsync(formAccumulator, section, contentDisposition);
+                    }
                 }
 
-                return inputData;
+                return new InputData
+                {
+                    File = file,
+                    FileInfo = new FileNew
+                    {
+                        datasetId = GetDatasetId(formAccumulator)
+                    },
+                    RequireValidFile = GetRequireValidFiles(formAccumulator),
+                };
             }
-            catch(Exception ex)
+            catch
             {
                 return null;
             }
         }
 
-        private static async Task<IFormFile> CreateFormFile(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
+        private static async Task<IFormFile> CreateFormFileAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
         {
             var memoryStream = new MemoryStream();
             await section.Body.CopyToAsync(memoryStream);
@@ -74,44 +73,65 @@ namespace Geonorge.OpplastingsApi.Services
             };
         }
 
-        private Encoding GetEncoding(MultipartSection section)
+        private static async Task<KeyValueAccumulator> AccumulateFormAsync(
+            KeyValueAccumulator formAccumulator, MultipartSection section, ContentDispositionHeaderValue contentDisposition)
+        {
+            var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name).Value;
+
+            using var streamReader = new StreamReader(section.Body, GetEncoding(section), true, 1024, true);
+            {
+                var value = await streamReader.ReadToEndAsync();
+
+                if (string.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
+                    value = string.Empty;
+
+                formAccumulator.Append(key, value);
+
+                if (formAccumulator.ValueCount > FormReader.DefaultValueCountLimit)
+                    throw new InvalidDataException($"Form key count limit {FormReader.DefaultValueCountLimit} exceeded.");
+            }
+
+            return formAccumulator;
+        }
+
+        private static Encoding GetEncoding(MultipartSection section)
         {
             var hasMediaTypeHeader = MediaTypeHeaderValue.TryParse(section.ContentType, out var mediaType);
 
-            // UTF-7 is insecure and shouldn't be honored. UTF-8 succeeds in 
-            // most cases.
+#pragma warning disable SYSLIB0001
             if (!hasMediaTypeHeader || Encoding.UTF7.Equals(mediaType.Encoding))
-            {
                 return Encoding.UTF8;
-            }
+#pragma warning restore SYSLIB0001
 
             return mediaType.Encoding;
         }
 
-        private async Task<KeyValueAccumulator> AccumulateForm(KeyValueAccumulator formAccumulator, MultipartSection section, ContentDispositionHeaderValue contentDisposition)
+        private static int GetDatasetId(KeyValueAccumulator formAccumulator)
         {
-            var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name).Value;
-            using var streamReader = new StreamReader(section.Body, GetEncoding(section), true, 1024, true);
-            {
-                var value = await streamReader.ReadToEndAsync();
-                if (string.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
-                {
-                    value = string.Empty;
-                }
-                formAccumulator.Append(key, value);
+            var accumulatedValues = formAccumulator.GetResults();
+            accumulatedValues.TryGetValue("datasetId", out var value);
 
-                if (formAccumulator.ValueCount > FormReader.DefaultValueCountLimit)
-                {
-                    throw new InvalidDataException($"Form key count limit {FormReader.DefaultValueCountLimit} exceeded.");
-                }
-            }
+            if (!int.TryParse(value.ToString(), out var datasetId))
+                throw new Exception($"Dataset-ID {value} er ikke gyldig");
 
-            return formAccumulator;
+            return datasetId;
+        }
+
+        private static bool GetRequireValidFiles(KeyValueAccumulator formAccumulator)
+        {
+            var accumulatedValues = formAccumulator.GetResults();
+            accumulatedValues.TryGetValue("requireValidFile", out var value);
+            var requireValidString = value.ToString();
+
+            if (string.IsNullOrWhiteSpace(requireValidString))
+                return false;
+
+            return bool.TryParse(requireValidString, out var requireValid) && requireValid;
         }
     }
 
     public interface IMultipartRequestService
     {
-        Task<InputData> GetFormDataAndFilesFromMultipart();
+        Task<InputData> GetInputDataFromMultipartAsync();
     }
 }

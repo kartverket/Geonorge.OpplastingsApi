@@ -1,4 +1,6 @@
 using Geonorge.OpplastingsApi.Extensions;
+using Geonorge.OpplastingsApi.HttpClients;
+using Geonorge.OpplastingsApi.Hubs;
 using Geonorge.OpplastingsApi.Middleware;
 using Geonorge.OpplastingsApi.Models.Entity;
 using Geonorge.OpplastingsApi.Services;
@@ -7,13 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 string configFile = "appsettings.json";
+
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Local")
     configFile = "appsettings.Development.json";
 
@@ -23,9 +25,9 @@ var configuration = new ConfigurationBuilder()
     .Build();
 
 var logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(configuration)
-        .Enrich.FromLogContext()
-        .CreateLogger();
+    .ReadFrom.Configuration(configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
@@ -35,6 +37,9 @@ builder.Logging.AddSerilog(logger);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSignalR();
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -64,38 +69,40 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
                 {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header
-                        },
-                        new List<string>()
-                    }
-                });
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
 });
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IDatasetService, DatasetService>();
 builder.Services.AddTransient<INotificationService, NotificationService>();
+builder.Services.AddTransient<IMessageService, MessageService>();
 builder.Services.AddTransient<IMultipartRequestService, MultipartRequestService>();
-builder.Services.AddDbContext<ApplicationContext>(opts =>
-        opts.UseSqlServer(builder.Configuration.GetConnectionString("UploadApiDatabase")));
+builder.Services.AddDbContext<ApplicationContext>(opts => opts.UseSqlServer(builder.Configuration.GetConnectionString("UploadApiDatabase")));
+
+builder.Services.AddHttpClient<IValidatorHttpClient, ValidatorHttpClient>();
 
 builder.Services.Configure<AuthConfiguration>(configuration.GetSection(AuthConfiguration.SectionName));
 builder.Services.Configure<NotificationConfiguration>(configuration.GetSection(NotificationConfiguration.SectionName));
 builder.Services.Configure<FileConfiguration>(configuration.GetSection(FileConfiguration.SectionName));
+builder.Services.Configure<ValidatorConfiguration>(configuration.GetSection(ValidatorConfiguration.SectionName));
 
 builder.Services.AddCors();
-
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -139,6 +146,12 @@ app.UseHttpsRedirection();
 
 app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
 
+app.Use(async (context, next) =>
+{
+    context.Request.EnableBuffering();
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapControllers();
@@ -158,8 +171,10 @@ using (var scope = app.Services.CreateScope())
     dataContext.Database.Migrate();
 }
 
+app.MapHub<MessageHub>("/hubs/message");
+
 app.Run();
 
 
-    
+
 

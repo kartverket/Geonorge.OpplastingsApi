@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Geonorge.OpplastingsApi.Models.Api
+﻿namespace Geonorge.OpplastingsApi.Models.Api
 {
     public class File
     {
