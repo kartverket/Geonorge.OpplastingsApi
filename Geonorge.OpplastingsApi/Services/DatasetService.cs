@@ -95,7 +95,7 @@ public class DatasetService : IDatasetService
                 Title = d.Title,
                 ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
                 RequireValidFile = d.RequireValidFile,
-                Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName, Status = f.Status,Date = f.Date }).ToList(),
+                Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName, Status = f.Status,Date = f.Date }).OrderByDescending(o => o.Date).ToList(),
                 AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
             }
             ).FirstOrDefaultAsync();
