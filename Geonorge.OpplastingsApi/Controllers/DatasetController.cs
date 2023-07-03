@@ -248,7 +248,7 @@ namespace Geonorge.OpplastingsApi.Controllers
 
                     if (validationReport.Errors > 0)
                     {
-                        // Noe greier her...
+                        return UnprocessableEntity($"Filen inneholder {validationReport.Errors} feil");
                     }
                 }
 
