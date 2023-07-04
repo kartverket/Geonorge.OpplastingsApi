@@ -240,7 +240,7 @@ namespace Geonorge.OpplastingsApi.Controllers
 
                 await CheckFileExtensionValidity(inputData);
 
-                if (inputData.RequireValidFile)
+                if (inputData.File.FileName.EndsWith("gml"))
                 {
                     await _messageService.SendAsync("Validerer...");
 
@@ -248,6 +248,7 @@ namespace Geonorge.OpplastingsApi.Controllers
 
                     if (validationReport.Errors > 0)
                     {
+                        if(inputData.RequireValidFile)
                         return UnprocessableEntity($"Filen inneholder {validationReport.Errors} feil");
                     }
                 }
