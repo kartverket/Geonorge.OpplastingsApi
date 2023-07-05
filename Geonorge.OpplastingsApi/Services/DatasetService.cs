@@ -42,7 +42,7 @@ public class DatasetService : IDatasetService
                         Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
-                ).ToListAsync();
+                ).OrderBy(o => o.Title).ToListAsync();
         }
         else if (user.HasRole(Role.Editor)) 
         {
@@ -55,7 +55,7 @@ public class DatasetService : IDatasetService
                     Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
-                ).ToListAsync();
+                ).OrderBy(o => o.Title).ToListAsync();
 
             if (datasetsOwner.Any()) 
                 return datasetsOwner;
@@ -69,7 +69,7 @@ public class DatasetService : IDatasetService
                     Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
-                ).ToListAsync();
+                ).OrderBy(o => o.Title).ToListAsync();
 
             if (datasetsUploader.Any())
                 return datasetsUploader;
