@@ -296,6 +296,16 @@ public class DatasetService : IDatasetService
                 Directory.CreateDirectory(uploads);
 
             string filePath = Path.Combine(uploads, file.FileName);
+            if (System.IO.File.Exists(filePath)) 
+            {
+                var newFileName = file.FileName.Replace(".", "-" + fileAdded.Id + ".");
+                filePath = Path.Combine(uploads, newFileName);
+                fileNew.FileName = newFileName;
+                _context.Files.Update(fileNew);
+                _context.SaveChangesAsync();
+                fileAdded.FileName = fileNew.FileName;
+
+            }
             using (Stream fileStream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(fileStream);
