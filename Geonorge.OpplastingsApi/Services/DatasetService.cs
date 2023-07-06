@@ -39,7 +39,7 @@ public class DatasetService : IDatasetService
                         Id = d.Id,
                         Title = d.Title,
                         ContactEmail = d.ContactEmail, ContactEmailExtra = d.ContactEmailExtra, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile = d.RequireValidFile,
-                        Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList(),
+                        Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName, Status = f.Status, Date = f.Date }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
                 ).OrderBy(o => o.Title).ToListAsync();
@@ -52,7 +52,7 @@ public class DatasetService : IDatasetService
                     Id = d.Id,
                     Title = d.Title,
                     ContactEmail = d.ContactEmail, ContactEmailExtra = d.ContactEmailExtra, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile=d.RequireValidFile,
-                    Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
+                    Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName, Status = f.Status, Date = f.Date }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
                 ).OrderBy(o => o.Title).ToListAsync();
@@ -66,7 +66,7 @@ public class DatasetService : IDatasetService
                     Id = d.Id,
                     Title = d.Title,
                     RequireValidFile = d.RequireValidFile,
-                    Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
+                    Files = d.Files.Where(u => u.UploaderUsername == user.Username).Select(f => new api.File { Id = f.Id, FileName = f.FileName, Status = f.Status, Date = f.Date }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
                 ).OrderBy(o => o.Title).ToListAsync();
@@ -327,7 +327,7 @@ public class DatasetService : IDatasetService
         if (user == null)
             throw new UnauthorizedAccessException("Brukeren har ikke tilgang");
 
-        var fileData = await _context.Files.Where(f => f.Id == fileUpdated.datasetId).Include(d => d.Dataset).FirstOrDefaultAsync();
+        var fileData = await _context.Files.Where(f => f.Id == id).Include(d => d.Dataset).FirstOrDefaultAsync();
 
         if (!user.IsAdmin)
             if (!(user.HasRole(Role.Editor) && fileData.Dataset.OwnerOrganization == user.OrganizationName)
