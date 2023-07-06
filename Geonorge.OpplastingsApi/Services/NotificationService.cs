@@ -24,7 +24,7 @@ namespace Geonorge.OpplastingsApi.Services
             {
                 string subject = "Ny status fil";
                 string body = $"Filen {file.FileName} har fått status {file.Status}";
-                SendEmail(file.UploaderEmail, file.Dataset.ContactEmail, subject, body);
+                SendEmail(file.UploaderEmail, file.Dataset.ContactEmail, null, subject, body);
                 _logger.LogInformation("SendEmailStatusChangedToUploader");
             }
 
@@ -40,7 +40,7 @@ namespace Geonorge.OpplastingsApi.Services
             {
                 string subject = "Ny opplastet fil";
                 string body = $"Filen {file.FileName} er lastet opp av {file.UploaderPerson}";
-                SendEmail(file.UploaderEmail, file.Dataset.ContactEmail, subject, body);
+                SendEmail(file.UploaderEmail, file.Dataset.ContactEmail,file.Dataset.ContactEmailExtra, subject, body);
                 _logger.LogInformation("SendEmailUploadedFileToContact");
             }
 
@@ -51,7 +51,7 @@ namespace Geonorge.OpplastingsApi.Services
 
         }
 
-        public void SendEmail(string fromEmail, string toEmail, string subject, string messageBody) 
+        public void SendEmail(string fromEmail, string toEmail, string? toEmailExtra, string subject, string messageBody) 
         {
             try
             {
@@ -61,6 +61,12 @@ namespace Geonorge.OpplastingsApi.Services
 
                 MailboxAddress to = MailboxAddress.Parse(toEmail);
                 message.To.Add(to);
+
+                if (!string.IsNullOrEmpty(toEmailExtra)) 
+                { 
+                    MailboxAddress toExtra = MailboxAddress.Parse(toEmailExtra);
+                    message.To.Add(toExtra);
+                }
 
                 message.Subject = subject;
 

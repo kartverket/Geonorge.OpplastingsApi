@@ -10,6 +10,7 @@ namespace Geonorge.OpplastingsApi.Models.Api
 
         public string? MetadataUuid { get; set; }
         public string? ContactEmail { get; set; }
+        public string? ContactEmailExtra { get; set; }
         public string? ContactName { get; set; }
         public string? OwnerOrganization { get; set; }
         public string? RequiredRole { get; set; }

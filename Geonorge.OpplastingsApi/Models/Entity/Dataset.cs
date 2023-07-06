@@ -21,6 +21,8 @@ namespace Geonorge.OpplastingsApi.Models.Entity
         [Required]
         public string ContactEmail { get; set; }
         [StringLength(255)]
+        public string? ContactEmailExtra { get; set; }
+        [StringLength(255)]
         [Required]
         public string RequiredRole { get; set; }
 

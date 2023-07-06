@@ -38,7 +38,7 @@ public class DatasetService : IDatasetService
                     {
                         Id = d.Id,
                         Title = d.Title,
-                        ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile = d.RequireValidFile,
+                        ContactEmail = d.ContactEmail, ContactEmailExtra = d.ContactEmailExtra, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile = d.RequireValidFile,
                         Files = d.Files.Select(f => new api.File {Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
@@ -51,7 +51,7 @@ public class DatasetService : IDatasetService
                 {
                     Id = d.Id,
                     Title = d.Title,
-                    ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile=d.RequireValidFile,
+                    ContactEmail = d.ContactEmail, ContactEmailExtra = d.ContactEmailExtra, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole, RequireValidFile=d.RequireValidFile,
                     Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName }).ToList(),
                     AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
                 }
@@ -93,7 +93,7 @@ public class DatasetService : IDatasetService
             {
                 Id=d.Id,
                 Title = d.Title,
-                ContactEmail = d.ContactEmail, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
+                ContactEmail = d.ContactEmail,ContactEmailExtra=d.ContactEmailExtra, ContactName = d.ContactName, MetadataUuid = d.MetadataUuid, OwnerOrganization = d.OwnerOrganization, RequiredRole = d.RequiredRole,
                 RequireValidFile = d.RequireValidFile,
                 Files = d.Files.Select(f => new api.File { Id = f.Id, FileName = f.FileName, Status = f.Status,Date = f.Date }).OrderByDescending(o => o.Date).ToList(),
                 AllowedFileFormats = d.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
@@ -122,6 +122,7 @@ public class DatasetService : IDatasetService
             MetadataUuid = datasetNew.MetadataUuid,
             ContactEmail = datasetNew.ContactEmail,
             ContactName = datasetNew.ContactName,
+            ContactEmailExtra = datasetNew.ContactEmailExtra,
             OwnerOrganization = datasetNew.OwnerOrganization,
             RequiredRole = datasetNew.RequiredRole,
             RequireValidFile = datasetNew.RequireValidFile,
@@ -136,7 +137,7 @@ public class DatasetService : IDatasetService
         await _context.Datasets.AddAsync(dataset);
         await _context.SaveChangesAsync();
 
-        return new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail,
+        return new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail, ContactEmailExtra = dataset.ContactEmailExtra,
             ContactName = dataset.ContactName, MetadataUuid = dataset.MetadataUuid, OwnerOrganization = dataset.OwnerOrganization, RequiredRole = dataset.RequiredRole, RequireValidFile = dataset.RequireValidFile,
              AllowedFileFormats = dataset.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
         };
@@ -163,6 +164,9 @@ public class DatasetService : IDatasetService
 
         if (!string.IsNullOrEmpty(datasetUpdated.ContactEmail))
             dataset.ContactEmail = datasetUpdated.ContactEmail;
+
+        if (!string.IsNullOrEmpty(datasetUpdated.ContactEmailExtra))
+            dataset.ContactEmail = datasetUpdated.ContactEmailExtra;
 
         if (!string.IsNullOrEmpty(datasetUpdated.OwnerOrganization))
             dataset.OwnerOrganization = datasetUpdated.OwnerOrganization;
@@ -200,7 +204,7 @@ public class DatasetService : IDatasetService
         return new api.Dataset 
         { 
             Id = dataset.Id, Title = dataset.Title,
-            ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName,
+            ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName, ContactEmailExtra = dataset.ContactEmailExtra,
             MetadataUuid = dataset.MetadataUuid, RequiredRole = dataset.RequiredRole, RequireValidFile = dataset.RequireValidFile,  
             OwnerOrganization=dataset.OwnerOrganization,
             AllowedFileFormats = dataset.AllowedFileFormats.Select(f => new api.FileFormat { Extension = f.Extension, Name = f.Name }).ToList()
@@ -287,7 +291,7 @@ public class DatasetService : IDatasetService
         fileAdded.Id = fileNew.Id;
         fileAdded.FileName = fileNew.FileName;
         fileAdded.Status = fileNew.Status;
-        fileAdded.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName, MetadataUuid = dataset.MetadataUuid };
+        fileAdded.Dataset = new api.Dataset { Id = dataset.Id, Title = dataset.Title, ContactEmail = dataset.ContactEmail, ContactName = dataset.ContactName, ContactEmailExtra = dataset.ContactEmailExtra, MetadataUuid = dataset.MetadataUuid };
 
         string uploads = Path.Combine(_config.Path, dataset.MetadataUuid);
         if (file.Length > 0)

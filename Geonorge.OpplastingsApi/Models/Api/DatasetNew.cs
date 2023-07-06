@@ -25,6 +25,12 @@ namespace Geonorge.OpplastingsApi.Models.Api
         [EmailAddress]
         public string ContactEmail { get; set; }
         /// <summary>
+        /// Ekstra epost med informasjon om opplastet fil, kan være til felles epost eller at annen person også jobber med datasettet
+        /// </summary>
+        /// <example>firmapost@epost.no</example>
+        [EmailAddress]
+        public string? ContactEmailExtra { get; set; }
+        /// <summary>
         /// Fullt navn på kontaktpersonen
         /// </summary>
         /// <example>Ola Nordmann</example>
