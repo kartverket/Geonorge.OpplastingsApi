@@ -28,7 +28,7 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// Ekstra epost med informasjon om opplastet fil, kan være til felles epost eller at annen person også jobber med datasettet
         /// </summary>
         /// <example>firmapost@epost.no</example>
-        [RegularExpression(@"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$", ErrorMessage = "Please enter a valid e-mail adress")]
+        [RegularExpression(@"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$", ErrorMessage = "Ugyldig epost-adresse")]
         public string? ContactEmailExtra { get; set; }
         /// <summary>
         /// Fullt navn på kontaktpersonen

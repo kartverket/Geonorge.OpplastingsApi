@@ -166,7 +166,7 @@ public class DatasetService : IDatasetService
             dataset.ContactEmail = datasetUpdated.ContactEmail;
 
         if (!string.IsNullOrEmpty(datasetUpdated.ContactEmailExtra))
-            dataset.ContactEmail = datasetUpdated.ContactEmailExtra;
+            dataset.ContactEmailExtra = datasetUpdated.ContactEmailExtra;
 
         if (!string.IsNullOrEmpty(datasetUpdated.OwnerOrganization))
             dataset.OwnerOrganization = datasetUpdated.OwnerOrganization;
