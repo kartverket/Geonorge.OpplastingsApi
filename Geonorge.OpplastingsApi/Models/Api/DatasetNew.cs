@@ -22,7 +22,7 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// </summary>
         /// <example>epost@epost.no</example>
         [Required(ErrorMessage = "Epost er påkrevd felt")]
-        [EmailAddress]
+        [EmailAddress (ErrorMessage = "Epost er ugyldig")]
         public string ContactEmail { get; set; }
         /// <summary>
         /// Ekstra epost med informasjon om opplastet fil, kan være til felles epost eller at annen person også jobber med datasettet

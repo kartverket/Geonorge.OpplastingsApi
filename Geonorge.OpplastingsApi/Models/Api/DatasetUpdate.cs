@@ -13,20 +13,20 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// Dataset/metadata tittel
         /// </summary>
         /// <example>Gravplass</example>
-        [Required]
+        [Required(ErrorMessage = "Tittel er påkrevd felt")]
         public string Title { get; set; }
         /// <summary>
         /// Metadata uuid
         /// </summary>
         /// <example>261a2a6a-bcae-43bd-b7c3-cde40b22ee55</example>
-        [Required]
+        [Required(ErrorMessage = "MetadataUuid er påkrevd felt")]
         public string MetadataUuid { get; set; }
         /// <summary>
         /// Epost med informasjon om opplastet fil blir sendt til kontaktperson for datasettet
         /// </summary>
         /// <example>epost@epost.no</example>
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "Epost er påkrevd felt")]
+        [EmailAddress(ErrorMessage = "Epost er ugyldig")]
         public string ContactEmail { get; set; }
         /// <summary>
         /// Ekstra epost med informasjon om opplastet fil, kan være til felles epost eller at annen person også jobber med datasettet
@@ -38,25 +38,25 @@ namespace Geonorge.OpplastingsApi.Models.Api
         /// Fullt navn på kontaktpersonen
         /// </summary>
         /// <example>Ola Nordmann</example>
-        [Required]
+        [Required(ErrorMessage = "Kontaktperson er påkrevd felt")]
         public string ContactName { get; set; }
         /// <summary>
         /// Organisasjonsnavn i metadata/registeret https://register.geonorge.no/organisasjoner som eier datasettet
         /// </summary>
         /// <example>Kartverket</example>
-        [Required]
+        [Required(ErrorMessage = "Eier er påkrevd felt")]
         public string OwnerOrganization { get; set; }
         /// <summary>
         /// Rolle i Baat som brukeren må ha for å få tilgang til datasettet
         /// </summary>
         /// <example>nd.gjenbruk_gravplass</example>
-        [Required]
+        [Required(ErrorMessage = "Påkrevd rolle er påkrevd felt")]
         public string RequiredRole { get; set; }
         /// <summary>
         /// Lovlige filformater (filendelser)
         /// </summary>
         /// <example>[&quot;gml&quot;]</example>
-        [Required]
+        [Required(ErrorMessage = "Gyldige filformater er påkrevd")]
         public List<string>? AllowedFileFormats { get; set; }
         /// <summary>
         /// Kreve at fil må være gyldig for å få legge inn
