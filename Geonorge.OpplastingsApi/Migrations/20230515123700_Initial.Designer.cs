@@ -4,6 +4,7 @@ using Geonorge.OpplastingsApi.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Geonorge.OpplastingsApi.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20230515123700_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace Geonorge.OpplastingsApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("DatasetAllowedFileFormats", b =>
-                {
-                    b.Property<string>("AllowedFileFormatsExtension")
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("DatasetsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("AllowedFileFormatsExtension", "DatasetsId");
-
-                    b.HasIndex("DatasetsId");
-
-                    b.ToTable("DatasetAllowedFileFormats");
-                });
 
             modelBuilder.Entity("Geonorge.OpplastingsApi.Models.Entity.Dataset", b =>
                 {
@@ -47,10 +35,6 @@ namespace Geonorge.OpplastingsApi.Migrations
 
                     b.Property<string>("ContactEmail")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ContactEmailExtra")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -68,9 +52,6 @@ namespace Geonorge.OpplastingsApi.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
-
-                    b.Property<bool>("RequireValidFile")
-                        .HasColumnType("bit");
 
                     b.Property<string>("RequiredRole")
                         .IsRequired()
@@ -136,64 +117,6 @@ namespace Geonorge.OpplastingsApi.Migrations
                     b.HasIndex("DatasetId");
 
                     b.ToTable("Files");
-                });
-
-            modelBuilder.Entity("Geonorge.OpplastingsApi.Models.Entity.FileFormat", b =>
-                {
-                    b.Property<string>("Extension")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.HasKey("Extension");
-
-                    b.ToTable("FileFormats");
-
-                    b.HasData(
-                        new
-                        {
-                            Extension = "gml",
-                            Name = "Geography Markup Language"
-                        },
-                        new
-                        {
-                            Extension = "sos",
-                            Name = "Samordnet Opplegg for Stedfestet Informasjon (SOSI)"
-                        },
-                        new
-                        {
-                            Extension = "gdb",
-                            Name = "ESRI file Geodatabase"
-                        },
-                        new
-                        {
-                            Extension = "shp",
-                            Name = "Shape"
-                        },
-                        new
-                        {
-                            Extension = "gpkg",
-                            Name = "GeoPackage"
-                        });
-                });
-
-            modelBuilder.Entity("DatasetAllowedFileFormats", b =>
-                {
-                    b.HasOne("Geonorge.OpplastingsApi.Models.Entity.FileFormat", null)
-                        .WithMany()
-                        .HasForeignKey("AllowedFileFormatsExtension")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Geonorge.OpplastingsApi.Models.Entity.Dataset", null)
-                        .WithMany()
-                        .HasForeignKey("DatasetsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Geonorge.OpplastingsApi.Models.Entity.File", b =>
