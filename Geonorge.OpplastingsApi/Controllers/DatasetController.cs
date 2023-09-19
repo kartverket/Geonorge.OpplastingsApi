@@ -219,8 +219,8 @@ namespace Geonorge.OpplastingsApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
-        [RequestSizeLimit(1_048_576_000)]
+        //[RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
+        //[RequestSizeLimit(1_048_576_000)]
         public async Task<IActionResult> AddFile()
         {   
             if (!ModelState.IsValid)
