@@ -1,5 +1,7 @@
-﻿using Geonorge.OpplastingsApi.Models.Api;
+﻿using Geonorge.OpplastingsApi.Exceptions;
+using Geonorge.OpplastingsApi.Models.Api;
 using Microsoft.Extensions.Options;
+using System.Net;
 using System.Net.Http.Headers;
 
 namespace Geonorge.OpplastingsApi.HttpClients
@@ -27,15 +29,29 @@ namespace Geonorge.OpplastingsApi.HttpClients
                 Content = CreateFormData(file)
             };
 
-            using var response = await _client.SendAsync(request);
+            HttpResponseMessage response = null;
 
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                _logger.LogError("HTTP Status Code {StatusCode}: Kunne ikke validere '{FileName}'", response.StatusCode, file.FileName);
-                throw new Exception($"Kunne ikke validere '{file.FileName}' ({response.StatusCode})");
-            }
+                response = await _client.SendAsync(request);
 
-            return await response.Content.ReadFromJsonAsync<ValidationReport>();
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<ValidationReport>();
+            }
+            catch
+            {
+                var message = $"Kunne ikke validere filen '{file.FileName}'";
+
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                    message += $": {await response.Content.ReadAsStringAsync()}";
+
+                throw new FileValidationException(message);
+            }
+            finally
+            {
+                response.Dispose();
+            }
         }
 
         private static MultipartFormDataContent CreateFormData(IFormFile file)

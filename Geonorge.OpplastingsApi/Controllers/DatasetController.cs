@@ -1,12 +1,8 @@
 using Geonorge.OpplastingsApi.HttpClients;
 using Geonorge.OpplastingsApi.Models;
 using Geonorge.OpplastingsApi.Models.Api;
-using Geonorge.OpplastingsApi.Models.Api.User;
 using Geonorge.OpplastingsApi.Services;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
-using System.IO;
 using File = Geonorge.OpplastingsApi.Models.Api.File;
 
 namespace Geonorge.OpplastingsApi.Controllers
@@ -238,19 +234,16 @@ namespace Geonorge.OpplastingsApi.Controllers
                 if (inputData?.File == null)
                     return BadRequest();
 
-                await CheckFileExtensionValidity(inputData);
+                //await CheckFileExtensionValidity(inputData);
 
-                if (inputData.File.FileName.EndsWith("gml"))
+                if (inputData.RequireValidFile && inputData.FileType == FileType.GML32)
                 {
                     await _messageService.SendAsync("Validerer...");
 
                     var validationReport = await _validatorHttpClient.ValidateAsync(inputData.File);
 
                     if (validationReport.Errors > 0)
-                    {
-                        if(inputData.RequireValidFile)
                         return UnprocessableEntity($"Filen inneholder {validationReport.Errors} feil");
-                    }
                 }
 
                 var fileAdded = await _datasetService.AddFile(inputData.FileInfo, inputData.File, user);
