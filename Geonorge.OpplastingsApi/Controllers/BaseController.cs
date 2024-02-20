@@ -1,4 +1,5 @@
-﻿using Geonorge.OpplastingsApi.Services;
+﻿using Geonorge.OpplastingsApi.Exceptions;
+using Geonorge.OpplastingsApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Geonorge.OpplastingsApi.Controllers
@@ -17,20 +18,15 @@ namespace Geonorge.OpplastingsApi.Controllers
         {
             _logger.LogError(exception.ToString());
 
-            switch (exception)
+            return exception switch
             {
-                case ArgumentException _:
-                case FormatException _:
-                    return BadRequest();
-                case UnauthorizedAccessException ex:
-                    return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
-                case AuthorizationException ex:
-                    return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-                case Exception _:
-                    return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
-            return null;
+                ArgumentException _ or FormatException _ => BadRequest(),
+                FileValidationException ex => BadRequest(ex.Message),
+                UnauthorizedAccessException ex => StatusCode(StatusCodes.Status401Unauthorized, ex.Message),
+                AuthorizationException ex => StatusCode(StatusCodes.Status403Forbidden, ex.Message),
+                Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
+                _ => null,
+            };
         }
     }
 }

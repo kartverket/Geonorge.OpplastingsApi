@@ -1,4 +1,5 @@
 ﻿using Geonorge.OpplastingsApi.Models.Api;
+using Geonorge.OpplastingsApi.Utils;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
@@ -22,6 +23,7 @@ namespace Geonorge.OpplastingsApi.Services
             var reader = new MultipartReader(request.GetMultipartBoundary(), request.Body);
             var formAccumulator = new KeyValueAccumulator();
             IFormFile file = null;
+            FileType fileType = FileType.Unknown;
             MultipartSection section;
 
             try
@@ -35,6 +37,7 @@ namespace Geonorge.OpplastingsApi.Services
 
                     if (contentDisposition.IsFileDisposition() && name == "file" && file == null)
                     {
+                        fileType = await FileHelper.GetFileTypeAsync(section);
                         file = await CreateFormFileAsync(contentDisposition, section);
                     }
                     else if (contentDisposition.IsFormDisposition() && (name == "datasetId" || name == "requireValidFile"))
@@ -46,6 +49,7 @@ namespace Geonorge.OpplastingsApi.Services
                 return new InputData
                 {
                     File = file,
+                    FileType = fileType,
                     FileInfo = new FileNew
                     {
                         datasetId = GetDatasetId(formAccumulator)
